@@ -6,18 +6,17 @@
 MultiPhen, a package for the genetic association testing of multiple phenotypes
 }
 \description{
-MultiPhen is the package containing the function mPhen, which performs association testing between genetic variants (SNPs; CNVs to be added soon) and multiple phenotypes. The primary purpose is for modelling and testing multiple phenotypes jointly by performing an ordinal regression where SNPs are treated as the outcome and multiple phenotypes are predictors; this can have large increases in statistical power to detect genotype-phenotype associations over the univariate approach. However, mPhen can also be used to perform standard univariate linear regression (SNP as predictor) and univariate ordinal regression (SNP as outcome) on the phenotypes under study. mPhen can be applied to genotyped or imputed data.
+MultiPhen is the package containing the function mPhen, which performs association testing between genetic variants (SNPs; CNVs to be added soon) and multiple phenotypes. The primary purpose is for modelling and testing multiple phenotypes jointly by performing an ordinal regression where SNPs are treated as the outcome and multiple phenotypes are predictors; this can have large increases in statistical power to detect genotype-phenotype associations over the univariate approach. However, mPhen can also be used to perform standard univariate linear regression (SNP as predictor) and univariate ordinal regression (SNP as outcome) on the phenotypes under study. mPhen can be applied to genotyped or imputed data. From version 0.4 the option ``multiPhenTest'' is now called ``JointModel'', and its default is now ``TRUE''
 }
 \details{
 \tabular{ll}{
 Package: \tab MultiPhen\cr
 Type: \tab Package\cr
-Version: \tab 0.2\cr
-Date: \tab 2011-07-12\cr
+Version: \tab 0.4\cr
+Date: \tab 2012-27-03\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr
 }
-~~ An overview of how to use the package, including the most important functions ~~
 }
 \author{
 Lachlan Coin, Federico Calboli, Clive Hoggart, Paul O'Reilly, Yotsawat Pomyen.
@@ -39,5 +38,5 @@ data(pheno)
 mPhen(snps, pheno, phenotypes = c('testPheno1', 'testPheno2'), 
       covariates = 'testPheno3')
 mPhen(snps, pheno, phenotypes = c('testPheno1', 'testPheno2'), 
-      covariates = 'testPheno3', multiPhenTest=TRUE)
+      covariates = 'testPheno3', JointModel=TRUE)
 }

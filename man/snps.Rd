@@ -5,7 +5,7 @@
 A dummy snp dataset that provides an example of the input snp data used by the package
 }
 \description{
-A dummy dataset of three SNPs, as a matrix of 3 column and 150 rows. The genotypes are in 0/1/2 format (0 for AA, 1 for AB and 2 for BB, where A and B correspond, arbitrarily, to the two alleles). The data has been randomly generated, for instructional purposes only, and do not yield a significant association with any of the example phenotypes.
+A dummy dataset of three SNPs, as a matrix of 3 column and 150 rows. The genotypes are in 0/1/2 format (0 for ``AA'', 1 for ``Aa'' and 2 for ``aa'', where A and a correspond, arbitrarily, to the two alleles). The data has been randomly generated, for instructional purposes only, and do not yield a significant association with any of the example phenotypes.
 }
 \usage{data(snps)}
 \format{

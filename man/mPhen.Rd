@@ -2,7 +2,7 @@
 \alias{mPhen}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-mPhen, a function for the genetic association testing of multiple phenotypes
+A function for the genetic association testing of multiple phenotypes
 }
 \description{
 mPhen performs association testing between genetic variants (SNPs; CNVs to be added soon) and multiple phenotypes. The primary purpose is for modelling and testing multiple phenotypes jointly by performing an ordinal regression where SNPs are treated as the outcome and multiple phenotypes are predictors; this can have large increases in statistical power to detect genotype-phenotype associations over the univariate approach (method described in O'Reilly et al. 2011). However, mPhen can also be used to perform standard univariate linear regression (SNP as predictor) and univariate ordinal regression (SNP as outcome) on the phenotypes under study. mPhen can be applied to directly genotyped or imputed data.
@@ -10,7 +10,7 @@ mPhen performs association testing between genetic variants (SNPs; CNVs to be ad
 \usage{
 mPhen(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], 
       covariates = NULL, maf_thresh = 0.001, corThresh = 0, 
-      inverseRegress = FALSE, multiPhenTest = FALSE, multiGen = FALSE, 
+      inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, 
       fillMissingPhens = FALSE, scoreTest = FALSE, imputed = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
@@ -39,8 +39,8 @@ Only phenotypes that have a pairwise Pearson's correlation coefficient greater t
   \item{inverseRegress}{
 If TRUE then SNP is treated as the outcome in the (then Ordinal) regression, if FALSE then SNP is predictor and (one) phenotype is the outcome in the usual way. Default is FALSE.
 }
-  \item{multiPhenTest}{
-If TRUE then the phenotypes are modelled and tested jointly, with SNP as outcome and the phenotypes as predictors (overrides inverseREGRESS=FALSE); a likelihood ratio test of the full model vs the model without phenotypes is performed (F-test), providing a P-value to test the association between the genotypes and phenotypes at each marker (usual genome-wide significance threshold, 5e-8, is appropriate). Betas and P-values (from Wald test) relating to the association of each phenotype with the SNP from the model are also provided (NB. These are not the same as the corresponding univariate results since they are produced by the joint model). If FALSE the phenotypes are tested univariately (the order of the regression is then dependent on inverseREGRESS). Default is FALSE.
+  \item{JointModel}{
+If TRUE then the phenotypes are modelled and tested jointly, with SNP as outcome and the phenotypes as predictors (overrides inverseREGRESS=FALSE); a likelihood ratio test of the full model vs the model without phenotypes is performed (F-test), providing a P-value to test the association between the genotypes and phenotypes at each marker (usual genome-wide significance threshold, 5e-8, is appropriate). Betas and P-values (from Wald test) relating to the association of each phenotype with the SNP from the model are also provided (NB. These are not the same as the corresponding univariate results since they are produced by the joint model). If FALSE the phenotypes are tested univariately (the order of the regression is then dependent on inverseREGRESS). Default is TRUE.
 }
   \item{multiGen}{
 Not yet implemented
@@ -74,6 +74,8 @@ A matrix where the first column contains the regression coefficients (betas) cor
 O'Reilly et al. 2011. MultiPhen: Joint model of multiple phenotypes increases discovery in GWAS. Under review.}
 \author{
 Lachlan Coin, Federico Calboli, Clive Hoggart, Paul O'Reilly, Yotsawat Pomyen.
+
+Maintainer, Federico Calboli \email{f.calboli@imperial.ac.uk} 
 }
 \note{
 The user should remember that the genotype data file is always a matrix of at least a column, hence if taking a subset of 1 SNP in the non-imputed genotype data matrix, the option drop = FALSE should be used (see the example below)
@@ -93,17 +95,17 @@ mPhen(snps, pheno, phenotypes = c('testPheno1', 'testPheno2'),
 # separately on the first two phenotypes, with the third phenotype as a covariate.
 
 mPhen(snps, pheno, phenotypes = c('testPheno1', 'testPheno2'), 
-      covariates = 'testPheno3',  multiPhenTest = TRUE) 
+      covariates = 'testPheno3',  JointModel = TRUE) 
 # tests association of SNP genotypes and the first two phenotypes 
 # in the joint phenotype model (SNP as outcome in an ordinal regression),
 # with the third phenotype as a covariate.
 
 mPhen(snps[,2, drop = FALSE], pheno, phenotypes = c('testPheno1', 'testPheno2'), 
-      covariates = 'testPheno3',  multiPhenTest = TRUE) 
+      covariates = 'testPheno3',  JointModel = TRUE) 
 # please note the use use of drop = FALSE if analysing only one SNP
 
 mPhen(snps.imputed, pheno, phenotypes = c('testPheno1', 'testPheno2'), 
-      covariates = 'testPheno3',  multiPhenTest = TRUE, imputed = TRUE) 
+      covariates = 'testPheno3',  JointModel = TRUE, imputed = TRUE) 
 # for imputed data
 
 
