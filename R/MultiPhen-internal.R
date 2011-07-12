@@ -457,7 +457,7 @@ function(gvar,phen,families,inclu,covar,totweight,functi,maxCatForOrd = 5){
     glm.res = .getGlmRevOrdNoCov(var1,t(phenvec[,include]),weights[include]) 
   else 
     if(todo & !ord) 
-    .getGlmRevBinom(var1,t(phenvec[,include]),covar[include],weights[include],family) 
+    glm.res = .getGlmRevBinom(var1,t(phenvec[,include]),covar[include],weights[include],family) 
   else 
     if(todo)  
     glm.res = .getGlmRevOrd(var1,t(phenvec[,include]),covar[include],weights[include])
@@ -604,17 +604,256 @@ function(matr){
 function(x) min(x,1-x)
 
 .mod <-
-function(vec){ vec[vec==""] = 0; vec[vec=="-"] = 1000 - sum(as.numeric(vec[vec!="-"]),na.rm=TRUE); (as.numeric(vec)%*% 0:2)/1000}
+function(vec){
+  #vec[vec==""] = 0; 
+  #vec[vec=="-"] = 1000 - sum(as.numeric(vec[vec!="-"]),na.rm=TRUE); 
+  (as.numeric(vec)%*% 0:2)#/1000
+}
 
 .mod1 <-
 function(vec, rescale){
-  vec[vec==""] = 0
-  vec[vec=="-"] = 1000 - sum(as.numeric(vec[vec!="-"]),na.rm=TRUE);
+  #vec[vec==""] = 0
+  #vec[vec=="-"] = 1000 - sum(as.numeric(vec[vec!="-"]),na.rm=TRUE);
   #vec[vec<200]  =0
-  vec1 = floor(rescale*(as.numeric(vec)/1000))
+  vec1 = floor(rescale * as.numeric(vec))#floor(rescale*(as.numeric(vec)/1000))
   ind = vec1==max(vec1)
   vec1[ind] = vec1[ind]+ rescale - sum(vec1)
   vec1
+}
+
+.mPhen <-
+function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates = NULL,maf_thresh = 0.001, corThresh = 0.0, inverseRegress = FALSE, multiPhenTest = FALSE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE, exactTest = FALSE, exactMethod = "wald", imputed = FALSE){
+  rescale = 1
+  exactTest = FALSE
+  exactMethod = "wald"
+  expandData = FALSE
+  multiPhen = multiPhenTest
+  lmt1 = cbind(rep('pheno', length(phenotypes)), phenotypes)
+  cvt1 = cbind(rep('covar', length(covariates)), covariates)
+  limit = rbind(lmt1, cvt1)
+  samples = as.matrix(dimnames(phenoData)[[1]]) 
+  dimnames(samples) = list(NULL,"id")
+  max_indiv = 100000
+  if(imputed){
+    if(expandData) weights = as.vector(t(apply(genoData,1,.mod1, rescale)))
+    genoData = as.matrix(apply(genoData,1,.mod))
+    if(inverseRegress & !expandData) genoData = apply(genoData,c(1,2),round)
+    dimnames(genoData) = list(NULL,'rsID')
+  } 
+  ids = colnames(genoData)
+  #ids = names[1,1:3] #c("Log","GType","Freq")
+  baselevel=c(0,0,0,0)  ##this is used for maf calc.  For count all base (ie. normal) is 2
+  baselevel[ids=="countAll"] = 2
+  singleOutput=TRUE
+  zipOutput=FALSE
+  plate_id = "Plate"
+  variance_id ="variance"
+  varthresh =0.25
+  step = 1
+  #dimnames(samples)[[2]] = names[3,1:dim(samples)[2]]
+  #dimnames(genoData) = list(1:length(samples[,1]),names[1,1:dim(genoData)[2]])
+  # dimnames(genoData)[[2]] =names[1,1:dim(genoData)[2]]
+  geno_header = dimnames(genoData)[[2]]
+  geno = genoData
+  genotmp = genoData[,1,drop=FALSE]
+  if(max_indiv<dim(geno)[1]) geno = geno[1:max_indiv,,drop=FALSE]
+  if(expandData & !imputed) weights = .convAvgToUncMat(geno,rescale)
+  #if(dim(samples)[1]>max_indiv) samples = samples[1:max_indiv,,drop=FALSE]
+  phenoData = .fixNonNumeric(phenoData)
+  phenNames = dimnames(phenoData)[[2]]
+  todo_ = limit
+  todo = todo_[grep("^pheno",todo_[,1]),2]
+  excl = todo_[grep("^exclpheno",todo_[,1]),2]
+  covar = todo_[grep("^covar",todo_[,1]),2]
+  stratify=todo_[grep("^strat",todo_[,1]),2]
+  resid=todo_[grep("^resid",todo_[,1]),2]
+  genocov=todo_[grep("^genocov",todo_[,1]),2]
+  index = NULL
+  index_cov = NULL
+  index_resid = NULL
+  index_strat = NULL
+  exclindex = NULL
+  for ( ik in todo) index =c(index,which(phenNames==ik))
+  for ( ik in excl) exclindex =c(exclindex,grep(ik,phenNames))
+  for ( ik in covar) index_cov = c(index_cov,which(phenNames==ik))
+  for ( ik in resid) index_resid = c(index_resid,which(phenNames==ik))
+  for ( ik in stratify) index_strat = c(index_strat,which(phenNames==ik))
+  index = unique(index)
+  exclindex = unique(exclindex)
+  if(length(exclindex)>0)index = index[-match(exclindex,index)]
+  index_cov = unique(index_cov)
+  index_resid = unique(index_resid)
+  index_strat = unique(index_strat)
+  if(dim(todo_)[2]>2)phenoTrans = todo_[grep("^pheno",todo_[,1]),3] else phenoTrans = NULL
+  if(length(genocov)>0) genoTrans = apply(todo_[grep("^genocov",todo_[,1]),,drop=FALSE],1,.findInd,geno_header,3) else genoTrans = NULL
+  if(length(genocov)==0) genotmp=NULL
+  if(length(index)==1) multiPhen = FALSE
+  if(length(index_strat)>0 | length(index_cov) > 0) exactTest = FALSE
+  if(exactTest){
+    multiPhen = FALSE
+    multiGen = FALSE
+    inverseRegress = FALSE
+  }
+  funct = .getPvLrr
+  pvFunct = .getPvLrrMult
+  pvFunctMult = .getPvLrrAllGen
+  if(inverseRegress) funct = .getPvRev
+  if(multiPhen) pvFunct = .getPvRevPleio
+  if(scoreTest & multiPhen) pvFunct = .ordTest1
+  if(multiGen) pvFunctMult = .getPvLrrMultiGen
+  if(exactTest) funct = .getPvTable
+  toStrat = phenoData[,index_strat,drop=FALSE]
+  stratNames = dimnames(phenoData)[[2]][index_strat]
+  pheno_cov = phenoData[,index_cov,drop=FALSE]
+  pheno_resid =phenoData[,index_resid,drop=FALSE]
+  phenoData = phenoData[,index,drop=FALSE]
+  dimnames(phenoData)[[2]] = phenNames[index]
+  if(multiPhen){
+    if(fillMissingPhens) phenoData = .fillMissing(phenoData)
+    corel = (cor(phenoData,use="complete.obs"))^2
+    index1 = corel[1,]>corThresh
+    phenoData = phenoData[,index1,drop=FALSE]
+    index = index[index1]
+    dimnames(phenoData)[[2]] = phenNames[index]
+  }
+  var_id = which(dimnames(samples)[[2]]==variance_id)
+  plate_ind = which(dimnames(samples)[[2]]==plate_id)
+  plate = matrix(0, ncol=1, nrow = dim(samples)[1])
+  if(length(plate_ind)>0){
+    plate = .makeFactor(as.matrix(samples[,plate_ind]),c("plate"))
+  }
+  variance = samples[,var_id]
+  if(length(var_id)>0) varna =  variance>varthresh else varna = rep(FALSE,dim(samples)[1]) 
+  indiv = samples[,1]
+  mat = match(samples[,1],dimnames(phenoData)[[1]])
+  pheno1 = phenoData[mat,,drop=FALSE]
+  dimnames(pheno1)[[2]] = dimnames(phenoData)[[2]]
+  pheno_cov1 = pheno_cov[mat,,drop=FALSE]
+  pheno_resid1 = pheno_resid[mat,,drop=FALSE]
+  stratMatrix1 = .makeFactor(toStrat[mat,,drop=FALSE],stratNames)
+  if(!is.null(phenoTrans)){
+    #print(phenoTrans)
+    qqfam =  grep("^quantile",phenoTrans)
+    if(length(qqfam)>0) pheno1[,qqfam] = apply(pheno1[,qqfam,drop=FALSE],2,.makeQuantile)
+    toptail = grep("^toptail",phenoTrans)
+    if(length(toptail)>0) pheno1[,toptail] = apply(pheno1[,toptail,drop=FALSE],2,.makeTopTail,strsplit(phenoTrans[toptail[1]],"_")[[1]][2])
+    thresh = grep("^thresh",phenoTrans)
+    if(length(thresh)>0) pheno1[,thresh] = apply(pheno1[,thresh,drop=FALSE],2,.makeThresh,strsplit(phenoTrans[thresh[1]],"_")[[1]][1:2])
+    dimnames(pheno1)[[2]] = dimnames(phenoData)[[2]]
+  }
+  #if(!is.null(varianceIsCov)){
+   # if(varianceIsCov & length(var_id)>0) pheno_cov1 = cbind(pheno_cov1,as.numeric(variance))
+   # if(varianceIsCov & length(plate_ind)>0) pheno_cov1 = cbind(pheno_cov1,plate)
+   # if(!varianceIsCov & length(var_id)>0) pheno_resid1 = cbind(pheno_resid1,as.numeric(variance))
+   # if(!varianceIsCov & length(plate_ind)>0) pheno_resid1 = cbind(pheno_resid1,plate)
+  #}
+  if(!is.null(genotmp)){
+    #if(genoCovIsRes) pheno_resid1 = cbind(pheno_resid1,.fixNonNumeric(genotmp)) else 
+    pheno_cov1 = cbind(pheno_cov1,.fixNonNumeric(genotmp))
+  }
+  if(dim(pheno_cov1)[2]==0) phenoCovna = rep(0,dim(samples)[1]) else phenoCovna = is.na(apply(pheno_cov1,1,sum))
+  if(dim(pheno_resid1)[2]==0) phenoResna = rep(0,dim(samples)[1]) else phenoResna = is.na(apply(pheno_resid1,1,sum))
+  families = rep(0, dim(pheno1)[2])
+  inclM = as.matrix(apply(pheno1,2,.getIncl, phenoCovna | phenoResna | varna))
+  for(i in 1:(dim(pheno1)[2])) families[i] = .getFamily(pheno1[,i],inclM[,i])
+  binom = families=="binomial"
+  caseInd = apply(pheno1,2,.iscase)
+  for(i in 1:(dim(pheno1)[2])) if(binom[i]) pheno1[,i] = pheno1[,i]-min(pheno1[,i],na.rm=TRUE)
+  if(dim(pheno_cov1)[2]>0)for(i in 1:(dim(pheno_cov1)[2])) pheno_cov1[,i] = .centralise(pheno_cov1[,i])
+  inds = NULL
+  for(i in 1:length(ids)) inds = c(inds,grep(ids[i],geno_header))
+  ids = geno_header[inds]
+  geno_header = geno_header[inds]
+  alleleCols = grep("Allele[12]",geno_header)
+  gCols = grep("GType",geno_header)
+  if(length(alleleCols)>0){
+    geno_header = c("geno",geno_header[!alleleCols])
+  }
+  if(!is.null(geno)) {
+    geno = geno[,inds,drop=FALSE]
+    if(length(alleleCols)>0) geno = .mergeAlleleCols(geno,alleleCols)
+    if(length(gCols)>0) geno = .fixGenoCols(geno, gCols)
+    maxg = apply(geno,2,max,na.rm=TRUE)
+    ming = apply(geno,2,min,na.rm=TRUE)
+  }
+  nonint = maxg%%1 > 0
+  nonint1 = ming%%1 > 0
+  maxg[nonint] = floor(maxg[nonint])+1
+  ming[nonint1] = floor(ming[nonint1])
+  spl = seq(min(ming)+1,(max(maxg)),step) - 0.5
+  typenames = c("pheno","incl","caseInd","offsets")
+  phenN = phenNames[index]
+  if(!is.null(phenoTrans)) phenN = apply(rbind(phenN,phenoTrans),2,paste,collapse=".")
+  arraynames = list(phenN, typenames,indiv )
+  phendata = .getArray(arraynames)
+  phendata[,1,] = t(pheno1)
+  phendata[,2,] = t(inclM)
+  phendata[,3,] = t(caseInd)
+  genoweights = .getArray(list(geno_header,c("geno","weights","include"),samples[,1]))
+  if(!is.null(geno)) genoweights[,1,] = t(geno)
+  genoweights[,2,] =  t( matrix(1,nrow = dim(samples)[1],ncol = length(geno_header)))
+  datanme = list("pheno"=phendata,"pheno_cov" = pheno_cov1, "pheno_res" = pheno_resid1, "geno" = genoweights, "strat"=stratMatrix1, "alleleCols" = alleleCols,"gCols" = gCols, "ind" = inds)
+  datanme2 = datanme
+  if(length(geno_header)==1) multiGen = FALSE
+  if(expandData){
+    len = length(indiv)
+    datanme2 = .expandDat(datanme,length(spl)+1)
+    if(!is.null(weights))datanme2$geno[,2,] = t(weights[,inds])
+    for(i in 1:(length(spl)+1)) datanme2$geno[,1,((i-1)*len +1):(i*len)] = rep((i-1),length(geno_header))
+    datanme2$geno[,3,] = matrix(TRUE,ncol = length(geno_header), nrow = length(indiv)*(length(spl)+1))
+  }
+  if(length(index)>0) for(i in 1:(length(index))) datanme$pheno[i,4,] = .calcOffset(datanme$pheno[i,,],families[i], datanme$pheno_res)
+  if(expandData){
+    if(length(index)>0) for(i in 1:(length(index))) datanme2$pheno[i,4,] = .calcOffset(datanme2$pheno[i,,],families[i], datanme2$pheno_res)
+  }
+  if(!expandData) datanme2 = datanme
+  fams = levels(as.factor(families))
+  dimcounts = c(dim(datanme$strat)[2],length(index),length(geno_header),2)
+  if(length(index_strat)>0) dimcounts[1] = dimcounts[1]+1
+  if(multiPhen) dimcounts[2] = dimcounts[2]+1
+  if(multiGen) dimcounts[3] = dimcounts[3]+1
+  stratificNames = dimnames(datanme$strat)[[2]]
+  if(length(stratificNames)==1) stratificNames = c("all")
+  phenN = phenNames[index]
+  if(multiPhen) phenN = c(phenN,"multiPhen")
+  res = array(NA,dim=dimcounts,dimnames=list(stratificNames, phenN, geno_header,c("beta","pvalue")))
+  geno1 = datanme$geno
+  geno1[,3,] = !apply(as.matrix(geno1[,1,]),c(1,2),is.na)
+  geno2 = geno1
+  if(expandData) geno2 = datanme2$geno
+  maf = rep(NA,dim(geno1)[1])
+  for(k in 1:length(geno_header)) maf[k] = .getMaf(as.numeric(geno1[k,1,]),baselevel[k],2)
+  for(j in 1:(dim(datanme$strat)[2])){
+    inclu = datanme2$strat[,j]
+    res[j,,,] =  pvFunctMult(geno2,datanme2$pheno,families,inclu,datanme2$pheno_cov,rescale,pvFunct,funct)
+  }
+  if(length(index_strat)>0) 
+    res[dim(datanme$strat)[2]+1,,,] =apply(apply(res[1:(dim(datanme$strat)[2]-1),,,,drop=FALSE],c(2,3),.metaresInvVarianceFixed),c(3,1),t)
+  #dimcounts = c(dim(datanme$strat)[2],length(families),length(geno_header),(length(spl)+1))
+  #countsCase = array(NA,dim=dimcounts)
+  #countsControl = array(NA,dim=dimcounts)
+  #hwe_control = array(NA,dim=dimcounts[1:3])
+  #hwe_case = array(NA,dim=dimcounts[1:3])
+  #maf_control = array(NA,dim=dimcounts[1:3])
+  #maf_case = array(NA,dim=dimcounts[1:3])
+  #for(j in 1:(dimcounts[1])){
+  #  stra = datanme$strat[,j]
+  #  for(k in 1:length(families)){
+  #     # print(paste(j,k))
+  #    inclu = datanme$pheno[k,2,] & stra
+  #    incluCont = inclu &  !datanme$pheno[k,3,]
+  #    incluCase = inclu &  datanme$pheno[k,3,]
+  #    if(length(which(incluCont))>0)  countsControl[j,k,,] = t(apply(geno1[,1,incluCont,drop=FALSE],1,.getHist,spl))
+  #    if(length(which(incluCont))>0)  countsCase[j,k,,] = t(apply(geno1[,1,incluCase,drop=FALSE],1,.getHist,spl))
+  #    hwe_control[j,k,] =  apply(countsControl[j,k,,,drop=FALSE],3,.hwepall)
+  #    hwe_case[j,k,] =  apply(countsCase[j,k,,,drop=FALSE],3,.hwepall)
+  #    maf_control[j,k,] =  apply(countsControl[j,k,,,drop=FALSE],3,.mafCount)
+  #    maf_case[j,k,] =  apply(countsCase[j,k,,,drop=FALSE],3,.mafCount)
+  #  }
+  #}
+  res1 = res[1,,,]
+  res1
+  #print(res[dim(res)[1],,,])
 }
 
 .nonNumeric <-
@@ -715,131 +954,131 @@ function(vec) (vec - 0.5)*vec*(1-vec)
 function(vec) vec
 
 .Random.seed <-
-c(403L, 469L, -768284368L, 688998009L, -909376839L, 159314433L, 
--369409609L, -2049069687L, -87854763L, 2061683073L, -1409622537L, 
-1531233442L, -157842496L, 67001414L, 1626584440L, -1650516136L, 
-1580500050L, -839455268L, -1105938706L, -550519929L, 1417373011L, 
--1200715273L, -1522848567L, -882407745L, 1757814119L, -1627337425L, 
--1637721627L, -891789472L, -1263805174L, -275488356L, -2001086174L, 
-1368828350L, -928910972L, 667127978L, -225676196L, -1313521339L, 
-52630341L, 669479301L, -155863085L, -1973030819L, -405271719L, 
--1565014667L, -1076203053L, 1062141054L, -1598396356L, 151134146L, 
--2122097244L, -1740896380L, -2012142002L, 496495792L, 275031418L, 
--1858090285L, -1879422401L, -542359829L, -688647835L, 1637988451L, 
-57937675L, -1261253117L, -1787369151L, 864458044L, -1041205114L, 
--831034536L, -1894196786L, -92799590L, 1870784160L, -658659122L, 
-1484572968L, 883812449L, 1834430049L, -1937366759L, -1038085201L, 
-764159393L, -264718579L, 1957661609L, 1730687743L, 1800956538L, 
--1002133624L, -817513906L, 1434969216L, 1523275968L, -1344396326L, 
--1143181676L, 988919142L, 682537631L, -1663213205L, 2050197471L, 
-399123633L, -1506174457L, 1589084447L, -50131785L, 689292813L, 
--1743397624L, 125184578L, 1621179908L, 1667897658L, -470686234L, 
-1142658108L, 545765026L, 997407124L, -1733323699L, -1391009331L, 
--653316323L, 186692491L, 575771829L, -1470844431L, 1774191197L, 
--1689337701L, 1027295958L, 671088292L, 1464932074L, -1490301588L, 
-31920972L, 1121460214L, 1654360296L, 202621650L, -1062239829L, 
-2122631570L, -851084882L, 1327101005L, -1186035047L, 469257708L, 
--1344667660L, -1126942365L, -1285934448L, 99020479L, 835532033L, 
--226862966L, -1184869156L, 1778767747L, -1228120603L, -1311008714L, 
--2142447831L, -1837259644L, 1293814436L, 1754416735L, -945783245L, 
-1926465186L, 435392342L, -1223306443L, 552512638L, 349255737L, 
-394207855L, -695366772L, -1335249154L, 1064885009L, 1228930759L, 
--2055899648L, -85588721L, 1850946582L, 1754591562L, 177152841L, 
-989223725L, 590286120L, -729774064L, -683935889L, -515540716L, 
--1716722101L, -1641497539L, -886452338L, -1278238176L, -259757537L, 
--1127598519L, 178963146L, 813096549L, -199709208L, -1685417040L, 
--2082071445L, -525930729L, -1536972354L, -29318414L, -1595731167L, 
-1659117714L, 143786741L, -1384271045L, 658335904L, 2026717394L, 
--1468586563L, 1523457307L, 1349071652L, 1793818091L, -1995702454L, 
-419760486L, 1041958037L, 1061189793L, 760937332L, -1589448884L, 
--375984965L, 1051469144L, -1420960553L, 1137776361L, -1667670862L, 
--652867980L, 1614396267L, 512446141L, 1014156462L, 925246001L, 
--14195748L, -1773549828L, -1626633145L, 325675387L, 259635962L, 
-466178014L, -77921059L, -1759639130L, -738669807L, 1365748999L, 
--642321612L, -489828762L, -1100565959L, -119438545L, -707208984L, 
--1221292137L, -1416503506L, 110786L, -894724111L, 568553493L, 
--1476408048L, 1443948808L, -1767948377L, 537082460L, 1552453411L, 
-274123749L, 1082236438L, 69921592L, -166350489L, -508668447L, 
--1190987742L, 540458044L, 2126688631L, -617693728L, 779008360L, 
--1658573773L, 859753446L, 1896858247L, 206441012L, 1219863266L, 
--388259171L, -1295609776L, 695816384L, -1740906221L, 166922106L, 
--1275573471L, 1231470196L, -1230441496L, 1619023191L, -1448262416L, 
--934291992L, 725131455L, -636706094L, 1585262223L, 956275712L, 
--122564446L, 481477481L, -1081903808L, -900554512L, -1503501193L, 
--1524735938L, 351073141L, -884983848L, 1124434388L, -1104305649L, 
--1921586608L, -364589032L, 870239603L, 1203885766L, 1710896063L, 
-1048452268L, 662714778L, 1042576893L, -915512760L, 1056798904L, 
--44063365L, 1102589882L, 1989146905L, 1460788756L, 1464880040L, 
--1063275329L, 553816400L, -793284824L, -1759280409L, -844477158L, 
-216767607L, -16759680L, -937223494L, 35136209L, 1088682645L, 
--64653015L, -1566759545L, -1667825153L, -1502841331L, -951787616L, 
--87983959L, 496258285L, -1177490337L, -891298233L, 1221659573L, 
--1628094103L, -978359083L, 229881530L, 1824419577L, -1163834067L, 
--1791566743L, -24767563L, -170434849L, -1420708177L, 1540860733L, 
-1790221928L, 1997031361L, 1693600513L, -1708976245L, -579423045L, 
--1240669763L, 1895273097L, 740078489L, -1400081638L, -1793714003L, 
-4149701L, -503730459L, 1265765065L, 122932991L, 950658463L, 328181461L, 
--181836112L, -378577255L, -971713139L, -725083977L, 976357343L, 
--1066825763L, -915250191L, 305807621L, 1579269338L, 864219689L, 
--252325643L, 20308121L, -2115624443L, 1648327919L, 1996312039L, 
--2139487571L, 1260096656L, -673052903L, -1914992831L, -1368233901L, 
-760652931L, 715867928L, -1215876364L, 740506761L, -307700896L, 
--454706542L, 150498906L, 248482751L, 196964653L, 351948790L, 
-2085698414L, -2026710671L, -2089623010L, -916144718L, 2144631230L, 
-132401993L, 303441191L, -1926844984L, 1889820108L, 1911679421L, 
--159514288L, -1123123666L, -1657294470L, 582471739L, -2051578199L, 
-1124753782L, 360729574L, -1486921607L, -1957911954L, -782882526L, 
--1945991126L, 1499743141L, 2064880883L, 1395154200L, 1605876388L, 
-769960473L, 1711259080L, -1770345646L, 266768906L, 706839503L, 
-1607937389L, -1390049090L, -1864003218L, -1293727143L, -236607250L, 
-884431362L, 2065564734L, -1623798415L, -719483985L, -674231376L, 
--936740924L, -918357811L, -1085510064L, 615757406L, 701418130L, 
-1109362219L, -793291367L, 1200821254L, -1546741634L, 679979625L, 
-1464474918L, 557571946L, -67160502L, -1315425779L, -1100373893L, 
--591838536L, 354998500L, 612396521L, 849725328L, -1038687198L, 
-977778122L, 1576068031L, -1416689763L, -710789626L, 485124702L, 
--485536607L, -1324089218L, -171135502L, -1084715250L, -1353012887L, 
--1546123417L, -1720791208L, -1045751268L, -1697182483L, 1469038608L, 
--1343853954L, -244377526L, 858166139L, 1494036889L, -1148324074L, 
-301782742L, -1346183591L, -1054788418L, 650585234L, 1785422602L, 
-32644629L, 207702371L, -113017432L, 881622308L, -491769047L, 
-216562168L, 488546290L, -505806838L, 1912760447L, -471661651L, 
-1900401518L, 1412271214L, 1701305929L, 1559828702L, 1307421874L, 
-478196830L, 605926577L, 87331663L, -1064177312L, -1872402604L, 
--1309821747L, -881622592L, -841678402L, 220352962L, -1979346341L, 
-1199287609L, 3783894L, -1036381426L, -277815623L, -524688874L, 
--1047983910L, -2121489126L, -1662280163L, -500276629L, -2050118536L, 
--750057260L, 1450013993L, 1147167520L, 1952654834L, 1859567674L, 
--891575393L, -180035635L, -450706314L, -87770130L, 1940529585L, 
--1283780386L, 909926258L, 1076459646L, 1199099977L, 1693986087L, 
-1326525480L, -2045657332L, 572506781L, 722238864L, -255779410L, 
-104800186L, -1843300613L, 1398439337L, -125031754L, -194025562L, 
--1946131815L, -1198467058L, -333342910L, 1868569194L, -1124341915L, 
-152269747L, 1172666392L, 1087568100L, 820912345L, -2138341848L, 
-615147442L, 923680810L, 2012808047L, -1703500883L, -959880930L, 
--874409266L, -1259943431L, -416675250L, 968904226L, 1455961086L, 
--896085199L, -178280465L, -1975618704L, 701121828L, -1543475475L, 
-1234445904L, 1227846686L, 863541426L, 768879659L, 1658766361L, 
-844835430L, 517394206L, -888806967L, -754651354L, 81521834L, 
--1731679126L, 2014749613L, 688632091L, -399278920L, 1765847172L, 
--1689080855L, -1098423152L, -1326848382L, -884095702L, -1455194689L, 
--8552067L, -1226808442L, 1106401310L, 865754529L, 66723038L, 
--1658205230L, -1803638130L, -311354551L, -106034617L, 1948783864L, 
-1511898588L, 689559821L, -1994032720L, 692531518L, -1061945014L, 
-802773659L, 714309593L, 342473270L, -110269674L, -1571858407L, 
-417365214L, -1526358862L, 1269016234L, 45365845L, -172603229L, 
-843765416L, 1608353988L, 1952472681L, 1736712413L, 195721263L, 
--1398362902L, -2031613811L, -1414087934L, -998516687L, -342186780L, 
-27542045L, 324760223L, -449036205L, 668796338L, -1733726897L, 
--79824076L, -24660509L, -69181182L, 530056813L, -1297140563L, 
--1583964533L, -2139067238L, -217967759L, -128268674L, 1474153137L, 
--130240516L, -1149945771L, 184521823L, -311803837L, 638129022L, 
--1418718997L, -1613483624L, 754620307L, -1011536886L, 1687788273L, 
-1299610069L, -1410772993L, -447314678L, 444998301L, -2060139694L, 
--2029234663L, -2028650252L, 1288415573L, -1689760049L, 1592762659L, 
-1016629602L, -1895831897L, 1211190476L, -778804261L, 1638413322L, 
--1519823123L, -141189875L, 1624074315L, 2072709330L, -25262911L, 
-698300606L, 986582694L, 290964512L, -1179836159L)
+c(403L, 373L, 1550106100L, 838601621L, -1453538047L, -1218857010L, 
+2091903414L, 1701334947L, -2071190038L, -1325172799L, -854370848L, 
+-123597558L, 1009770699L, 969455859L, 740433579L, 67550253L, 
+-1205714581L, 514627462L, 1353797431L, -848310372L, 1714975381L, 
+1925093257L, -1106015188L, 247202605L, 1144584091L, -1020112686L, 
+-716543581L, 133152719L, 1684125623L, -1076265275L, -1234986788L, 
+-76629481L, -670330424L, -701724770L, 1347162808L, -1857942382L, 
+586030930L, -165940417L, -625697718L, 937985191L, -293429048L, 
+9831517L, 1826862792L, -478578024L, 2066725063L, 163297656L, 
+-1863151304L, 306044288L, -666346730L, -2042926704L, -1255772666L, 
+556348416L, 50058774L, -2093562466L, 1456067434L, 754442453L, 
+-629114490L, 547598820L, -1941578998L, 150490190L, -1216853664L, 
+1382779367L, 1673487256L, -2090953383L, 849035162L, 34772159L, 
+-1932078408L, -335632525L, -1038233308L, -746967243L, 1135665566L, 
+1490895439L, 339228423L, 1005578037L, 1054389384L, 1506275109L, 
+2019926941L, -977290400L, 126799361L, 1559923915L, 729847863L, 
+1696430802L, -1018143975L, 1554105059L, -944660222L, 1399493701L, 
+-1745970034L, -495188578L, 1558069034L, 231344959L, 1976645281L, 
+-940196548L, 1836250026L, -1701581766L, -1975018790L, 1372843048L, 
+1726385151L, -292626507L, -1908932428L, 1108804204L, 1440018552L, 
+-1682916752L, -264088150L, -350198328L, 511593804L, -1167867085L, 
+261438471L, -2113638374L, 2007024934L, 891640134L, 568347596L, 
+1898493480L, 1827884363L, -1093539901L, 1991923839L, 727476118L, 
+2077156340L, -1094367422L, -1625392887L, -2141285655L, 1989605684L, 
+-1479586090L, 51604506L, -914073462L, -257884920L, 1178632815L, 
+647273840L, 818870120L, -30836433L, -1112676923L, 1713818208L, 
+-137792171L, -1710102521L, -2068202152L, 16527693L, 1974980168L, 
+1174511093L, 2133929714L, -1727591604L, 1362878030L, -1087283261L, 
+-39189265L, 530922262L, 67468890L, 1621702634L, 1829410629L, 
+-2037278381L, 233004634L, -1046507611L, 1034472363L, 1030963979L, 
+1475101342L, 770309798L, -2049448647L, -133186321L, -1179211113L, 
+-2081443L, -1174733217L, -1631412111L, 1613938712L, -562899475L, 
+-1512935471L, -1843182048L, -2084847316L, 118915078L, 968512151L, 
+2035276533L, -1997047764L, 2022700971L, 946758208L, 1804009662L, 
+1847620496L, -1762856101L, -1296024150L, 2135215669L, 1544576245L, 
+-765595663L, -410503643L, -1800458600L, -1975985274L, 1880775628L, 
+-153488580L, -1969749179L, 444203072L, 504131503L, 352706357L, 
+-1091225524L, 785235313L, -1004193413L, 234025727L, -57283920L, 
+-803461240L, 1677239055L, 605229305L, 810956436L, -185634572L, 
+-1928615981L, 971995325L, 70255738L, 980928928L, 2039178174L, 
+-490288603L, 1645680650L, -388992414L, -262237464L, -1246229276L, 
+-1340987279L, -1196968738L, -1751844676L, 723997992L, -354555659L, 
+-383274852L, 550240783L, 1030053475L, -10503578L, 704889739L, 
+-457527691L, -2004026515L, -1472450141L, 2006824471L, -791170005L, 
+-815412056L, -885155338L, 649283124L, 1952722657L, -97296814L, 
+-29952182L, -449541824L, -2126313265L, 1195820425L, -1980170402L, 
+540131250L, -1129270288L, 117741799L, -850738149L, -1500752797L, 
+6003877L, -1788283696L, 210392573L, 417154923L, 1066773880L, 
+-1323372775L, 147683884L, -175418082L, 973072367L, 1867160023L, 
+-292692127L, 67273051L, 759300819L, 1621833956L, 290905957L, 
+-429310868L, -558501994L, 954892868L, -415670588L, 1547573890L, 
+871646563L, -876073005L, 2062413604L, -1545008269L, -269118520L, 
+1602700586L, 924480983L, 783927037L, 1895658725L, -1218652724L, 
+1139103978L, 938946543L, 316879290L, -604446331L, 532770884L, 
+2072721860L, -241410622L, -1285669116L, -465027045L, 1719497465L, 
+2119509869L, 573687100L, 1197318344L, -658316666L, 1679209814L, 
+-1810469252L, -153879405L, 1124587763L, 671539570L, 376144071L, 
+1879698027L, 987554385L, -769396846L, -346962410L, 2007504627L, 
+58267948L, 1129762787L, 924938983L, 151261963L, 999113930L, 287175682L, 
+-2137172466L, -379010953L, 128844700L, 248338763L, -1851573103L, 
+-856255517L, 715281585L, 54941629L, 2107239311L, 967881024L, 
+885434066L, -1065933942L, 467422447L, 1713767251L, -88765030L, 
+-384041140L, -1589755982L, -1343362784L, -1982270250L, -340305677L, 
+1372394274L, 1463727022L, 59872232L, -1914195932L, 1272154810L, 
+-1857541389L, 457658133L, 1745269658L, 1385285353L, -237557939L, 
+265464586L, -694693793L, 1163302554L, -1312739001L, -1697806215L, 
+1468096720L, 354106951L, 897209278L, 1957071404L, 2013317364L, 
+-363726538L, -861355259L, -8556536L, -1101761621L, 1386923035L, 
+1546516582L, -1966103392L, -1754769775L, -1999402816L, 1657898765L, 
+-1794812079L, 959357537L, 158441694L, 1349436254L, -1270295700L, 
+448847497L, 453202132L, 265284360L, 1341377640L, 1336943326L, 
+1440214910L, -309302522L, -1988274396L, -290211525L, 1086333424L, 
+1094500629L, -306574081L, -2023522344L, -147531937L, 387451779L, 
+1872938427L, -716003157L, -1354116042L, -1322118926L, -779206342L, 
+1481943318L, -336231506L, -749276453L, 623646443L, 424551442L, 
+-1217766051L, -1172606325L, 294619234L, -1802494879L, 2110251567L, 
+-1493374894L, 2110911274L, 307546360L, -1329495772L, 1041779858L, 
+1330659343L, -712478049L, -912468139L, -951149257L, -1495860085L, 
+-2025796336L, 25318215L, 888549828L, 1456295849L, 1351192537L, 
+-2084771218L, 173339296L, 588868710L, 1503500359L, 338124489L, 
+1292174979L, -1956819871L, 1512276386L, 1629882097L, 99781532L, 
+706422146L, 1680574375L, 1592734487L, 312448783L, 433677495L, 
+82767607L, 8296934L, 4012093L, 990159949L, -1320947075L, 1617991811L, 
+1871516643L, 551948002L, 1205252114L, -175376780L, 1833324289L, 
+931741400L, -2094756279L, -1650719881L, -1225948519L, 914313974L, 
+-163457958L, -191448572L, 1571156189L, -631002367L, 443433088L, 
+-437711196L, -1194324002L, -2070394526L, -683834907L, 1524956266L, 
+-1879936991L, 1831692464L, -776887737L, -750117173L, 2072596860L, 
+35468504L, 513710386L, -170448935L, -278201888L, -1322468224L, 
+-715613251L, 962341447L, -1175928201L, -247507879L, -697057831L, 
+-1797590324L, 1963683489L, -1297009733L, 104691873L, 1193723877L, 
+-1775852176L, 574435067L, -1059225021L, 248368841L, -1461363093L, 
+100629050L, -1322785911L, 201755008L, 1141582417L, 1819335659L, 
+-37154701L, -2046065726L, 508559574L, -172263065L, -2057220016L, 
+-284095054L, -310551804L, 224607573L, -223529307L, -257201737L, 
+-648463021L, -76406836L, 264127073L, -1874733701L, 816073160L, 
+1354926383L, -1997070151L, -100649966L, -1834819038L, 1092355979L, 
+-980625154L, -1965331566L, -875215752L, 384014497L, -1173659838L, 
+-2033780678L, -1628134434L, 1862365615L, -125651935L, 2122798495L, 
+1461797692L, -1683376099L, 642928603L, -698927242L, 126111331L, 
+-2128780632L, -1138064877L, -73265361L, 1623299920L, -1271671704L, 
+2058675943L, -1583235948L, -1989732039L, 1456732496L, -1892536824L, 
+1811712302L, 170925215L, 1522233118L, -1076111301L, -596284207L, 
+198156487L, 1619307961L, 1844518593L, 617614110L, 2058429650L, 
+-164692449L, 1850347398L, -1268645895L, -1441640255L, 571799119L, 
+-384801109L, 683731115L, -1681201030L, 139437806L, 1600980004L, 
+1646758649L, 881360486L, 1042109088L, -1983320444L, -759537848L, 
+-12579803L, -1751631495L, 1524782044L, -1945007867L, 1294656484L, 
+-1711070404L, 415298537L, -1056001045L, -1171920572L, -118775131L, 
+294269164L, -190148136L, -1421687657L, -456267842L, -1220543646L, 
+-658898740L, 317026859L, -445811892L, 966084703L, -200157255L, 
+-124422270L, 1986819866L, 823118988L, -1308004996L, -457171659L, 
+247804965L, 370292899L, 662441786L, -2010039331L, 1975707818L, 
+-2145743588L, 1891845095L, -164574771L, 415747045L, -2106755805L, 
+1937541943L, -774337647L, 1108012186L, -1283462801L, 1612920439L, 
+1338054146L, -1213645723L, -1807206357L, -692046348L, 1317511062L, 
+-1110510964L, -320165000L, 1468391L, 1428287965L, -1335001420L, 
+-1635222328L, 1689925916L, -1885297598L, 1407684966L, 1655619786L, 
+1289694378L, -1006846571L, 1885693037L, -1107439753L, 769201198L, 
+1234826105L, -356754536L, 361192080L, 514115149L, 850228075L, 
+1738289929L, -264537029L, 1925959733L, -1012083832L, -1586669457L, 
+575436058L, 1170727247L, 457548198L, 103125867L, 2044260643L, 
+1912546163L, -1364796340L, -580681423L, -435671296L, 189854745L, 
+164092732L, -536126731L, -1491475882L, -1666004136L, -1925388631L, 
+957672249L, -48987670L, 610708570L)
 .seFromPBeta <-
 function(v){x = abs(v[1])/qnorm(v[2]/2,lower.tail=FALSE); x}
 
