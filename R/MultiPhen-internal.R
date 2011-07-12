@@ -457,10 +457,10 @@ function(gvar,phen,families,inclu,covar,totweight,functi,maxCatForOrd = 5){
     glm.res = .getGlmRevOrdNoCov(var1,t(phenvec[,include]),weights[include]) 
   else 
     if(todo & !ord) 
-    glm.res = .getGlmRevBinom(var1,t(phenvec[,include]),covar[include],weights[include],family) 
+    glm.res = .getGlmRevBinom(var1,t(phenvec[,include]),covar[include,],weights[include],family) 
   else 
     if(todo)  
-    glm.res = .getGlmRevOrd(var1,t(phenvec[,include]),covar[include],weights[include])
+    glm.res = .getGlmRevOrd(var1,t(phenvec[,include]),covar[include,],weights[include])
   if(!todo) 
     rep(NA,2) 
   else 

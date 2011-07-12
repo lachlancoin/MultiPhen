@@ -1,0 +1,13 @@
+7e6258c3731d0711840ddc39b43ecfa6 *DESCRIPTION
+5f0998a3774c5a893b2540f7ac1d08c8 *NAMESPACE
+2a6ac795798c73c7ea684a3791d29bef *R/MultiPhen-internal.R
+82484c7b9fd31b885ba5134fd195c79c *R/mPhen.R
+81afb4e2658b777cec85e295a66e246f *data/pheno.rda
+5a2e634b690bffe88ddf4bd2fd07344f *data/snps.imputed.rda
+f62489fd27fd29d91c6b8a32fb3bb649 *data/snps.rda
+da2e6e1f6a69f25597795df2baa29d88 *man/MultiPhen-internal.Rd
+4fff553599d37d91913c593ddf0b09dc *man/MultiPhen-package.Rd
+8057ddb20e4c4ea9f6f845a29e2d2caf *man/mPhen.Rd
+b3f44d2782108d8c5177a889d91abd35 *man/pheno.Rd
+e39f83d2fcfcfcc297d40be1db63c1ea *man/snps.Rd
+b40e69baae57535a83ddae0b11a531a2 *man/snps.imputed.Rd

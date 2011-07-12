@@ -64,9 +64,9 @@ If TRUE the score test is performed rather than the likelihood ratio test (Defau
 Set TRUE if the genotype data is imputed, FALSE otherwise
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 A matrix where the first column contains the regression coefficients (betas) corresponding to the specified SNP/phenotype (if inverseREGRESS=FALSE then the beta corresponds to the SNP, otherwise the beta corresponds to the phenotype), the second column contains P-values for association between the SNP and phenotype. If MultiPhenTest=TRUE then there is also a row for each SNP containing the P-value for the multiple phenotype association test (the beta in this row is NA).
 }
@@ -81,9 +81,9 @@ The user should remember that the genotype data file is always a matrix of at le
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
-\seealso{
+%\seealso{
 %% ~~objects to See Also as \code{\link{help}}, ~~~
-}
+%}
 \examples{
 data(snps); data(snps.imputed); data(pheno)
 
