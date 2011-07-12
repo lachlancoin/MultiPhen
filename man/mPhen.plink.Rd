@@ -9,7 +9,7 @@ mPhen.plink opens a connection to a binary PLINK file and then streams in every 
 }
 \usage{
 mPhen.plink(root, results, phenoData, phenotypes = dimnames(phenoData)[[2]], 
-            covariates = NULL, maf_thresh = 0.001, corThresh = 0, 
+            covariates = NULL, resids = NULL, maf_thresh = 0.001, corThresh = 0, 
             inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, 
             fillMissingPhens = FALSE, scoreTest = FALSE)
 }
@@ -28,6 +28,9 @@ Vector of phenotypes, from phenoData, to be tested (Default is all phenotypes).
 }
   \item{covariates}{
 Vector of phenotypes, from phenoData, to be considered as covariates to be controlled for in the regression (Default is no covariates).
+}
+  \item{resids}{
+Vector of residuals, from phenoData, alternative way to adjust for covariates, which pre-calculates offset terms to use in the per SNP regression (Default is no residuals).
 }
   \item{maf_thresh}{
 Only SNPs with minor allele frequency greater than this value (a float between 0 and 0.5) will be tested (Default is 0.01).

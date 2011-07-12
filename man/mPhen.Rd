@@ -9,7 +9,7 @@ mPhen performs association testing between genetic variants (SNPs; CNVs to be ad
 }
 \usage{
 mPhen(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], 
-      covariates = NULL, maf_thresh = 0.001, corThresh = 0, 
+      covariates = NULL, resids = NULL, maf_thresh = 0.001, corThresh = 0, 
       inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, 
       fillMissingPhens = FALSE, scoreTest = FALSE, imputed = FALSE)
 }
@@ -26,6 +26,9 @@ Vector of phenotypes, from phenoData, to be tested (Default is all phenotypes).
 }
   \item{covariates}{
 Vector of phenotypes, from phenoData, to be considered as covariates to be controlled for in the regression (Default is no covariates).
+}
+  \item{resids}{
+Vector of residuals, from phenoData, alternative way to adjust for covariates, which pre-calculates offset terms to use in the per SNP regression (Default is no residuals).
 }
   \item{maf_thresh}{
 Only SNPs with minor allele frequency greater than this value (a float between 0 and 0.5) will be tested (Default is 0.01).
@@ -71,7 +74,7 @@ Set TRUE if the genotype data is imputed, FALSE otherwise
 A matrix where the first column contains the regression coefficients (betas) corresponding to the specified SNP/phenotype (if inverseREGRESS=FALSE then the beta corresponds to the SNP, otherwise the beta corresponds to the phenotype), the second column contains P-values for association between the SNP and phenotype. If MultiPhenTest=TRUE then there is also a row for each SNP containing the P-value for the multiple phenotype association test (the beta in this row is NA).
 }
 \references{
-O'Reilly et al. 2011. MultiPhen: Joint model of multiple phenotypes increases discovery in GWAS. Under review.}
+O'Reilly et al. 2012. MultiPhen: Joint model of multiple phenotypes can increase discovery in GWAS. http://dx.plos.org/10.1371/journal.pone.0034861}
 \author{
 Lachlan Coin, Federico Calboli, Clive Hoggart, Paul O'Reilly, Yotsawat Pomyen.
 
@@ -90,15 +93,14 @@ The user should remember that the genotype data file is always a matrix of at le
 data(snps); data(snps.imputed); data(pheno)
 
 mPhen(snps, pheno, phenotypes = c('testPheno1', 'testPheno2'), 
-      covariates = 'testPheno3') 
+      covariates = c('testPheno3', 'testPheno4')) 
 # performs the standard regression (SNP as predictor) 
-# separately on the first two phenotypes, with the third phenotype as a covariate.
+# separately on the first two phenotypes, and as a joint model
+# with the third and fourth phenotypes as a covariate.
 
 mPhen(snps, pheno, phenotypes = c('testPheno1', 'testPheno2'), 
-      covariates = 'testPheno3',  JointModel = TRUE) 
-# tests association of SNP genotypes and the first two phenotypes 
-# in the joint phenotype model (SNP as outcome in an ordinal regression),
-# with the third phenotype as a covariate.
+      covariates = c('testPheno3', 'testPheno4'), resids = 'testPheno5') 
+# the same as above, with the fifth phenotype as residual 
 
 mPhen(snps[,2, drop = FALSE], pheno, phenotypes = c('testPheno1', 'testPheno2'), 
       covariates = 'testPheno3',  JointModel = TRUE) 

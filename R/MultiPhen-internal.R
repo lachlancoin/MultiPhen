@@ -549,7 +549,7 @@ function(vec, rescale){
   vec1
 }
 .mPhen <-
-function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates = NULL,maf_thresh = 0.001, corThresh = 0.0, inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE, exactTest = FALSE, exactMethod = "wald", imputed = FALSE){
+function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates = NULL, resids = NULL, maf_thresh = 0.001, corThresh = 0.0, inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE, exactTest = FALSE, exactMethod = "wald", imputed = FALSE){
   rescale = 1
   exactTest = FALSE
   exactMethod = "wald"
@@ -557,7 +557,8 @@ function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates 
   multiPhen = JointModel
   lmt1 = cbind(rep('pheno', length(phenotypes)), phenotypes)
   cvt1 = cbind(rep('covar', length(covariates)), covariates)
-  limit = rbind(lmt1, cvt1)
+  rsd1 = cbind(rep('resid', length(resids)), resids)
+  limit = rbind(lmt1, cvt1, rsd1)
   samples = as.matrix(dimnames(phenoData)[[1]]) 
   dimnames(samples) = list(NULL,"id")
   max_indiv = 100000

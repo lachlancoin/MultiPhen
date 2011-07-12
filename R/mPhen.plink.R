@@ -1,5 +1,5 @@
 mPhen.plink <-
-function(root, results, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates = NULL,maf_thresh = 0.001, corThresh = 0.0, inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE){
+function(root, results, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates = NULL, resids = NULL, maf_thresh = 0.001, corThresh = 0.0, inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE){
   bed.file = paste(root, '.bed', sep = '')   
   bed.file.size = file.info(bed.file)$size # the bed file size in bytes
   sample.size = dim(read.table(paste(root, '.fam', sep = '')))[1] # number of individuals
@@ -19,7 +19,7 @@ function(root, results, phenoData, phenotypes = dimnames(phenoData)[[2]], covari
     bin.snp = matrix(as.numeric(rawToBits(r.bin.snp)), ncol = 2, byrow = TRUE)[1:sample.size,]
     genotype[,1] = bin.snp[,1] + bin.snp[,2] - 10 * ((bin.snp[,1] == 1) & (bin.snp[,2] == 0))
     genotype[genotype == -9] = NA 
-    g.res = try(mPhen(genotype, phenoData = phenoData, phenotypes = phenotypes, covariates = covariates, maf_thresh = 0.001, corThresh = 0.0, inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE, imputed = FALSE), silent = T)
+    g.res = try(mPhen(genotype, phenoData = phenoData, phenotypes = phenotypes, covariates = covariates, resids = resids, maf_thresh = 0.001, corThresh = 0.0, inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE, imputed = FALSE), silent = T)
     if(class(g.res) == 'try.error') next
     g.res = g.res[[1]]
     r.names = dimnames(g.res)[[1]]
