@@ -9,7 +9,7 @@ mPhen performs association testing between genetic variants (SNPs; CNVs to be ad
 }
 \usage{
 mPhen(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], 
-      covariates = NULL, resids = NULL, maf_thresh = 0.001, corThresh = 0, 
+      covariates = NULL, resids = NULL, strats = NULL, maf_thresh = 0.001, corThresh = 0, 
       inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, 
       fillMissingPhens = FALSE, scoreTest = FALSE, imputed = FALSE)
 }
@@ -30,6 +30,9 @@ Vector of phenotypes, from phenoData, to be considered as covariates to be contr
   \item{resids}{
 Vector of residuals, from phenoData, alternative way to adjust for covariates, which pre-calculates offset terms to use in the per SNP regression (Default is no residuals).
 }
+  \item{strats}{
+Statification vector (i.e. cases/controls, exposed/not exposed, etc), from phenoData (Default is no stratification).
+}  
   \item{maf_thresh}{
 Only SNPs with minor allele frequency greater than this value (a float between 0 and 0.5) will be tested (Default is 0.01).
 }

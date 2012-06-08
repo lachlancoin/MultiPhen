@@ -530,6 +530,15 @@ function(matr){
   ##c(metres$Q,pchisq(metres$Q,1,lower.tail=FALSE)) 
   c(metres$TE.fixed,pv)
 }
+
+.metaresHetMeasure<-function(matr){
+  inds = !is.na(matr[,2])
+  metres = metagen(matr[inds,1,drop=FALSE],apply(matr[inds,,drop=FALSE],1,.seFromPBeta))
+  pv = .pFromSEBeta(c(metres$TE.fixed,metres$seTE.fixed))
+  c(metres$Q,pchisq(metres$Q,1,lower.tail=FALSE)) 
+}
+
+
 .minOneMinus <-
 function(x) min(x,1-x)
 .mod <-
@@ -549,7 +558,7 @@ function(vec, rescale){
   vec1
 }
 .mPhen <-
-function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates = NULL, resids = NULL, maf_thresh = 0.001, corThresh = 0.0, inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE, exactTest = FALSE, exactMethod = "wald", imputed = FALSE){
+function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates = NULL, resids = NULL, strats = NULL, maf_thresh = 0.001, corThresh = 0.0, inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE, exactTest = FALSE, exactMethod = "wald", imputed = FALSE){
   rescale = 1
   exactTest = FALSE
   exactMethod = "wald"
@@ -558,7 +567,8 @@ function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates 
   lmt1 = cbind(rep('pheno', length(phenotypes)), phenotypes)
   cvt1 = cbind(rep('covar', length(covariates)), covariates)
   rsd1 = cbind(rep('resid', length(resids)), resids)
-  limit = rbind(lmt1, cvt1, rsd1)
+  str1 = cbind(rep('strat', length(strats)), strats)
+  limit = rbind(lmt1, cvt1, rsd1, str1)
   samples = as.matrix(dimnames(phenoData)[[1]]) 
   dimnames(samples) = list(NULL,"id")
   max_indiv = 100000
@@ -593,8 +603,8 @@ function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates 
   excl = todo_[grep("^exclpheno",todo_[,1]),2]
   covar = todo_[grep("^covar",todo_[,1]),2]
   stratify=todo_[grep("^strat",todo_[,1]),2]
-  resid=todo_[grep("^resid",todo_[,1]),2]
-  genocov=todo_[grep("^genocov",todo_[,1]),2]
+  resid = todo_[grep("^resid",todo_[,1]),2]
+  genocov = todo_[grep("^genocov",todo_[,1]),2]
   index = NULL
   index_cov = NULL
   index_resid = NULL
@@ -687,8 +697,8 @@ function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates 
   caseInd = apply(pheno1,2,.iscase)
   for(i in 1:(dim(pheno1)[2])) if(binom[i]) pheno1[,i] = pheno1[,i]-min(pheno1[,i],na.rm=TRUE)
   if(dim(pheno_cov1)[2]>0)for(i in 1:(dim(pheno_cov1)[2])) pheno_cov1[,i] = .centralise(pheno_cov1[,i])
-  inds = NULL
-  for(i in 1:length(ids)) inds = c(inds,grep(ids[i],geno_header))
+  inds = match(ids, geno_header)
+  #for(i in 1:length(ids)) inds = c(inds,grep(ids[i],geno_header))
   ids = geno_header[inds]
   geno_header = geno_header[inds]
   alleleCols = grep("Allele[12]",geno_header)
@@ -742,7 +752,7 @@ function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates 
   stratificNames = dimnames(datanme$strat)[[2]]
   if(length(stratificNames)==1) stratificNames = c("all")
   phenN = phenNames[index]
-  if(multiPhen) phenN = c(phenN,"multiPhen")
+  if(multiPhen) phenN = c(phenN,"JointModel")
   res = array(NA,dim=dimcounts,dimnames=list(stratificNames, phenN, geno_header,c("beta","pvalue")))
   geno1 = datanme$geno
   geno1[,3,] = !apply(as.matrix(geno1[,1,]),c(1,2),is.na)
