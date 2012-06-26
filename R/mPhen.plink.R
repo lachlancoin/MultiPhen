@@ -25,8 +25,9 @@ function(root, results, phenoData, phenotypes = dimnames(phenoData)[[2]], covari
     r.names = dimnames(g.res)[[1]]
     resmat = matrix(c(r.names, as.vector(g.res)), nrow = 3, byrow =T)
     snp = snp.names[i]
-    cat(snp, sep = '\n', append = T, file = results) # writes SNP name
-    cat(cbind(c('', 'beta', 'p-value'), resmat), sep = c(', ', ', ', '\n'), append = T, file = results) # writes results
+    resmat = rbind(snp, resmat)
+    cat(cbind(c('Marker', 'Phenotype', 'beta', 'p-value'), resmat), sep = c(', ', ', ', ', ', '\n'), append = T, file = results) # writes results
+    cat(',,,', sep = '\n', append = T, file = results) # writes SNP name
   }
   close(bin.connection)
 }

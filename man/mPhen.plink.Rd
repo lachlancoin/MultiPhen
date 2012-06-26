@@ -94,7 +94,6 @@ data(pheno)
         pheno, phenotypes = c('testPheno1', 'testPheno2'), 
         covariates = 'testPheno3',  JointModel = TRUE)}
 
-## both methods would read the data in chrom.bed into the object called my.chrom
 ## under NO CIRCUMSTANCES you should run somethig like
 \dontrun{results = mPhen.plink("chrom", "chrom-results.txt", pheno, 
         phenotypes = c('testPheno1', 'testPheno2'), 

@@ -12,8 +12,8 @@ MultiPhen is the package containing the function mPhen, which performs associati
 \tabular{ll}{
 Package: \tab MultiPhen\cr
 Type: \tab Package\cr
-Version: \tab 0.6\cr
-Date: \tab 2012-27-03\cr
+Version: \tab 0.7\cr
+Date: \tab 2012-06-26\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr
 }
