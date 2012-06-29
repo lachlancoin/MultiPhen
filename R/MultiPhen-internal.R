@@ -126,7 +126,15 @@ function(res,ind=2,totweight=1,hasCov=FALSE,family="binomial"){
   ll1 = logLik(res)
   beta = summary(res)$coeff[ind,1]
   nullfam = is.null(family)
-  if(hasCov & !nullfam) ll2 = logLik(update(res, ~covar,family=family)) else if(!nullfam) ll2 = logLik(update(res, ~1,family=family)) else if(hasCov) ll2 = logLik(update(res, ~covar)) else ll2 = logLik(update(res, ~1))
+  if(hasCov & !nullfam) 
+    ll2 = logLik(update(res, ~covar,family=family)) 
+  else 
+    if(!nullfam) 
+      ll2 = logLik(update(res, ~1,family=family)) 
+    else 
+      if(hasCov) ll2 = logLik(update(res, ~covar)) 
+      else 
+        ll2 = logLik(update(res, ~1))
   df = attr(ll1,"df")[1]-attr(ll2,"df")[1]
   # print(paste("df",df))
   pv = pchisq((2*(ll1 - ll2))/(totweight),df,lower.tail=FALSE)
@@ -412,7 +420,7 @@ function(gvar,phen,families,inclu,covar,totweight,functi,maxCatForOrd = 5){
   if(!todo) 
     rep(NA,2) 
   else 
-    .extractSig1P(glm.res,ind=ind,totweight=totweight,family=family)
+    .extractSig1P(glm.res, ind = ind, totweight = totweight, hasCov = !emptyCov, family = family)
 }
 .getPvTable <-
 function(phend, gvar, family,inclu,covar,totweight){
@@ -807,7 +815,8 @@ function(gvar,phend,families, inclu,covar,totweight,functi){
   x = t(as.matrix(phend[,1,include] - phend[,4,include]))
   #print(is.numeric(x[,1]))
   cats = max(y) + 1
-  x = x - apply(x,2,mean,na.rm=TRUE)
+  m = apply(x,2,mean,na.rm=TRUE)
+  x = t(t(x) - m)
   d = ncol(x)
   gamma = as.vector(table(y)/length(y))
   phi = log(gamma)
@@ -833,7 +842,8 @@ function(gvar,phend,families, inclu,covar,totweight,functi){
 .ordTest2 <-
 function(y,x){
   cats = max(y) + 1
-  x = x - apply(x,2,mean,na.rm=TRUE)
+  m = apply(x,2,mean,na.rm=TRUE)
+  x = t(t(x) - m)
   d = ncol(x)
   gamma = as.vector(table(y)/length(y))
   phi = log(gamma)

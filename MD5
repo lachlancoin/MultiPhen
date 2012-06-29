@@ -1,7 +1,7 @@
-bff57ac7be6966b6a6ef7fd7d515bf29 *DESCRIPTION
+1f2a495a8fd8b1e872021d80cb402e12 *DESCRIPTION
 5f0998a3774c5a893b2540f7ac1d08c8 *NAMESPACE
-b7bc7fe66add9c58bdcd8e2333920f43 *R/MultiPhen-internal.R
-c2d461c08e7876e003b362126610b62c *R/mPhen.R
+4611e374036acede49c5ce007bc69ec3 *R/MultiPhen-internal.R
+7a35ea97117c7f5d66d5011da0b2d2f0 *R/mPhen.R
 bcd9b59ad9e429288a04efb9aaed9731 *R/mPhen.plink.R
 a6da54504871dec6b5897c5f99f4fabc *R/read.plink.R
 25bfee7d370c30b76207c7c423c0d70c *R/zzz.R

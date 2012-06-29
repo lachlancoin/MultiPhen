@@ -8,6 +8,9 @@ function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates 
   if(testpheno){
     stop('ERROR! the phenotype data is NOT in matrix format. Please reformat. NOTE, if testing one single phenotype remember to add drop = F (see ?Extract)')
   }
+  if(JointModel){ 
+    inverseRegress = FALSE
+  }
   rescale = 1
   exactTest = FALSE
   exactMethod = "wald"
