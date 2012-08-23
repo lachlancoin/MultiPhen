@@ -123,42 +123,54 @@ function(res,ind = 2, totweight = 1){
 }
 .extractSig1 <-
 function(res,ind=2,totweight=1,hasCov=FALSE,family="binomial"){
-  ll1 = logLik(res)
-  beta = summary(res)$coeff[ind,1]
-  nullfam = is.null(family)
-  if(hasCov & !nullfam) 
-    ll2 = logLik(update(res, ~covar,family=family)) 
-  else 
-    if(!nullfam) 
-      ll2 = logLik(update(res, ~1,family=family)) 
+  if(sum(is.na(res)) == 2){
+    res1 = res
+  }
+  else {
+    ll1 = logLik(res)
+    beta = summary(res)$coeff[ind,1]
+    nullfam = is.null(family)
+    if(hasCov & !nullfam) 
+      ll2 = logLik(update(res, ~covar,family=family)) 
     else 
-      if(hasCov) ll2 = logLik(update(res, ~covar)) 
+      if(!nullfam) 
+        ll2 = logLik(update(res, ~1,family=family)) 
       else 
-        ll2 = logLik(update(res, ~1))
-  df = attr(ll1,"df")[1]-attr(ll2,"df")[1]
-  # print(paste("df",df))
-  pv = pchisq((2*(ll1 - ll2))/(totweight),df,lower.tail=FALSE)
-  c(beta,pv) 
+        if(hasCov) ll2 = logLik(update(res, ~covar)) 
+        else 
+          ll2 = logLik(update(res, ~1))
+    df = attr(ll1,"df")[1]-attr(ll2,"df")[1]
+    # print(paste("df",df))
+    pv = pchisq((2*(ll1 - ll2))/(totweight),df,lower.tail=FALSE)
+    res1 = c(beta,pv) 
+  }
+  res1
 }
 .extractSig1P <-
 function(res,ind=2,totweight=1,hasCov=FALSE,family="binomial"){
-  ll1 = logLik(res)
-  coeff = summary(res)$coeff
-  beta = coeff[ind,1]
-  ve = abs(as.numeric(coeff[ind,3]))
-  pvs = 2*pt(ve,1,lower.tail=FALSE)
-  nullfam = is.null(family)
-  if(hasCov & !nullfam) 
-    ll2 = logLik(update(res, ~covar,family=family)) 
-  else 
-    if(!nullfam) 
-    ll2 = logLik(update(res, ~1,family=family)) 
-  else if(hasCov) 
-    ll2 = logLik(update(res, ~covar)) 
-  else 
-    ll2 = logLik(update(res, ~1))
-  pv = pchisq((2*(ll1 - ll2))/(totweight),attr(ll1,"df")[1]-attr(ll2,"df")[1],lower.tail=FALSE)
-  cbind(c(beta,NA),c(pvs,pv))
+  if(sum(is.na(res)) == 2){
+    res1 = res
+  }
+  else {
+    ll1 = logLik(res)
+    coeff = summary(res)$coeff
+    beta = coeff[ind,1]
+    ve = abs(as.numeric(coeff[ind,3]))
+    pvs = 2*pt(ve,1,lower.tail=FALSE)
+    nullfam = is.null(family)
+    if(hasCov & !nullfam) 
+      ll2 = logLik(update(res, ~covar,family=family)) 
+    else 
+      if(!nullfam) 
+        ll2 = logLik(update(res, ~1,family=family)) 
+      else if(hasCov) 
+        ll2 = logLik(update(res, ~covar)) 
+      else 
+        ll2 = logLik(update(res, ~1))
+    pv = pchisq((2*(ll1 - ll2))/(totweight),attr(ll1,"df")[1]-attr(ll2,"df")[1],lower.tail=FALSE)
+    res1 = cbind(c(beta,NA),c(pvs,pv))
+  }
+  res1
 }
 .extractSigExact <-
 function(t){
@@ -241,11 +253,11 @@ function( vars, phenvec, weights, family){
 }
 .getGlmRevOrd <-
 function( vars, phenvec, covar,weights) {
- polr(vars ~ phenvec + covar,Hess=TRUE,method="logistic",weights = weights)
+ tryCatch(polr(vars ~ phenvec + covar,Hess=TRUE,method="logistic",weights = weights), error = return(rep(NA, 2)))
 }
 .getGlmRevOrdNoCov <-
 function( vars, phenvec, weights){
-  polr(vars ~ phenvec,Hess=TRUE,method="logistic",weights = weights)
+  tryCatch(polr(vars ~ phenvec,Hess=TRUE,method="logistic",weights = weights), error = return(rep(NA, 2)))
 }
 .getHist <-
 function(vec, spl){ 

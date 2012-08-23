@@ -2,8 +2,8 @@ Package: MultiPhen
 Type: Package
 Title: MultiPhen, a package for the genetic association testing of
         multiple phenotypes
-Version: 0.8
-Date: 2012-06-29
+Version: 0.9
+Date: 2012-08-23
 Author: Lachlan Coin, Paul O'Reilly, Yotsawat Pompyen, Clive Hoggart
         and Federico Calboli
 Depends: MASS, abind, epitools, meta
@@ -13,6 +13,6 @@ Description: Performs genetic association tests between SNPs
         model)
 License: GPL-2
 LazyLoad: yes
-Packaged: 2012-06-29 12:57:02 UTC; greatsage
+Packaged: 2012-08-23 14:25:24 UTC; greatsage
 Repository: CRAN
-Date/Publication: 2012-06-29 14:06:02
+Date/Publication: 2012-08-24 07:22:41
