@@ -253,11 +253,11 @@ function( vars, phenvec, weights, family){
 }
 .getGlmRevOrd <-
 function( vars, phenvec, covar,weights) {
- tryCatch(polr(vars ~ phenvec + covar,Hess=TRUE,method="logistic",weights = weights), error = return(rep(NA, 2)))
+ tryCatch(polr(vars ~ phenvec + covar,Hess=TRUE,method="logistic",weights = weights), error = function(e) print(c(NA, NA)))
 }
 .getGlmRevOrdNoCov <-
 function( vars, phenvec, weights){
-  tryCatch(polr(vars ~ phenvec,Hess=TRUE,method="logistic",weights = weights), error = return(rep(NA, 2)))
+  tryCatch(polr(vars ~ phenvec,Hess=TRUE,method="logistic",weights = weights), error = function(e) print(c(NA, NA)))
 }
 .getHist <-
 function(vec, spl){ 

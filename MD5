@@ -1,6 +1,6 @@
-d918378faa7e728815b5d02103b740f0 *DESCRIPTION
+202c0a72d27da939d2ca83716c2d0d19 *DESCRIPTION
 5f0998a3774c5a893b2540f7ac1d08c8 *NAMESPACE
-cdff39fb9f01dedcc7e384b46d04961a *R/MultiPhen-internal.R
+05e6f1c68612e9c69f3d6539f89eaf81 *R/MultiPhen-internal.R
 7a35ea97117c7f5d66d5011da0b2d2f0 *R/mPhen.R
 bcd9b59ad9e429288a04efb9aaed9731 *R/mPhen.plink.R
 a6da54504871dec6b5897c5f99f4fabc *R/read.plink.R
@@ -9,7 +9,7 @@ d6422768c9e805e531dcad59402d896e *data/pheno.rda
 5a2e634b690bffe88ddf4bd2fd07344f *data/snps.imputed.rda
 f62489fd27fd29d91c6b8a32fb3bb649 *data/snps.rda
 da2e6e1f6a69f25597795df2baa29d88 *man/MultiPhen-internal.Rd
-aac4a6c28f7a060bed614b1302cc0a92 *man/MultiPhen-package.Rd
+c2ce7984d027409543b3b325c0e10caf *man/MultiPhen-package.Rd
 c968a0a3ad48b20d8be6403911e8ba7a *man/mPhen.Rd
 cb4afb59efa34aee637b3352d0be8d92 *man/mPhen.plink.Rd
 5c390d19074f3eb1e346bfcced8c0a3d *man/pheno.Rd
