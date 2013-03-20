@@ -19,11 +19,13 @@ function(root, results, phenoData, phenotypes = dimnames(phenoData)[[2]], covari
     bin.snp = matrix(as.numeric(rawToBits(r.bin.snp)), ncol = 2, byrow = TRUE)[1:sample.size,]
     genotype[,1] = bin.snp[,1] + bin.snp[,2] - 10 * ((bin.snp[,1] == 1) & (bin.snp[,2] == 0))
     genotype[genotype == -9] = NA 
-    g.res = try(mPhen(genotype, phenoData = phenoData, phenotypes = phenotypes, covariates = covariates, resids = resids, strats = strats, maf_thresh = 0.001, corThresh = 0.0, inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE, imputed = FALSE), silent = T)
+    g.res = try(mPhen(genotype, phenoData = phenoData, phenotypes = phenotypes, covariates = covariates, resids = resids, strats = strats, maf_thresh = maf_thresh, corThresh = corThresh, inverseRegress = inverseRegress, JointModel = JointModel, multiGen = multiGen, fillMissingPhens = fillMissingPhens, scoreTest = scoreTest, imputed = FALSE), silent = T)
     if(class(g.res) == 'try.error') next
-    g.res = g.res[[1]]
-    r.names = dimnames(g.res)[[1]]
-    resmat = matrix(c(r.names, as.vector(g.res)), nrow = 3, byrow =T)
+    g.res1 = g.res[[1]]$Results
+    g.res2 = g.res[[1]]$nobs
+    r.names = dimnames(g.res1)[[1]]
+    resmat = matrix(c(r.names, as.vector(g.res1)), nrow = 3, byrow =T)
+    resmat = cbind(resmat, c('nobs','NA', g.res2 ))
     snp = snp.names[i]
     resmat = rbind(snp, resmat)
     cat(cbind(c('Marker', 'Phenotype', 'beta', 'p-value'), resmat), sep = c(', ', ', ', ', ', '\n'), append = T, file = results) # writes results

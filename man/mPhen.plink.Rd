@@ -9,9 +9,9 @@ mPhen.plink opens a connection to a binary PLINK file and then streams in every 
 }
 \usage{
 mPhen.plink(root, results, phenoData, phenotypes = dimnames(phenoData)[[2]], 
-            covariates = NULL, resids = NULL, strats = NULL, maf_thresh = 0.001, corThresh = 0, 
-            inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, 
-            fillMissingPhens = FALSE, scoreTest = FALSE)
+            covariates = NULL, resids = NULL, strats = NULL, maf_thresh = 0.001, 
+            corThresh = 0, inverseRegress = FALSE, JointModel = TRUE, 
+            multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{

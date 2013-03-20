@@ -1,13 +1,19 @@
 mPhen <-
-function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates = NULL, resids = NULL, strats = NULL, maf_thresh = 0.001, corThresh = 0.0, inverseRegress = FALSE, JointModel = TRUE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE, imputed = FALSE){
+function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates = NULL, resids = NULL, strats = NULL, maf_thresh = 1e-10, corThresh = 0.0, inverseRegress = TRUE, JointModel = TRUE, multiGen = FALSE, fillMissingPhens = FALSE, scoreTest = FALSE, imputed = FALSE){
   testgeno = !is.matrix(genoData)
   if(testgeno) {
-    stop('ERROR! The genetic data is NOT in matrix format. Please reformat the genetic data as a matrix and rerun the test')
+    stop('ERROR! The genetic data is NOT in matrix format. Please reformat the genetic data as a matrix and rerun the test (see ?as.matrix)')
   }
   testpheno = !is.matrix(phenoData)
   if(testpheno){
     stop('ERROR! the phenotype data is NOT in matrix format. Please reformat. NOTE, if testing one single phenotype remember to add drop = F (see ?Extract)')
   }
+  if(is.null(dimnames(genoData)[[1]]))
+    dimnames(genoData)[[1]] = 1:dim(genoData)[1]
+  if(!imputed & is.null(dimnames(genoData)[[2]]))
+    dimnames(genoData)[[2]] = 1:dim(genoData)[2]
+  if(imputed & is.null(dimnames(genoData)[[2]]))
+    dimnames(genoData)[[2]] = rep(1:(dim(genoData)[2]/3), each = 3)
   if(JointModel){ 
     inverseRegress = FALSE
   }
@@ -16,7 +22,7 @@ function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates 
   exactMethod = "wald"
   expandData = FALSE
   if(multiGen){
-    stop('ERROR! multiGen not yet implemented, resetting to FALSE')
+    warning('ERROR! multiGen not yet implemented, resetting to FALSE')
     multiGen = FALSE
   }
   if(imputed){

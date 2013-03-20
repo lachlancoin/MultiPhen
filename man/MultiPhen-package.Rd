@@ -12,8 +12,8 @@ MultiPhen is the package containing the function mPhen, which performs associati
 \tabular{ll}{
 Package: \tab MultiPhen\cr
 Type: \tab Package\cr
-Version: \tab 0.9.1\cr
-Date: \tab 2012-08-28\cr
+Version: \tab 1.0.0\cr
+Date: \tab 2013-03-20\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr
 }
@@ -23,7 +23,7 @@ Lachlan Coin, Federico Calboli, Clive Hoggart, Paul O'Reilly, Yotsawat Pomyen.
 
 Maintainer: Federico Calboli <f.calboli@imperial.ac.uk>}
 \references{
-O'Reilly et al. 2011. MultiPhen: Joint model of multiple phenotypes increases discovery in GWAS. Under review.
+O'Reilly et al. 2012. MultiPhen: Joint model of multiple phenotypes can increase discovery in GWAS. http://dx.plos.org/10.1371/journal.pone.0034861
 }
 \keyword{ package }
 \keyword{ genetics }

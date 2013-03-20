@@ -188,7 +188,10 @@ function(res,ind,totweight = 1,hasCov=FALSE,family="binomial"){
   vec  = coeff[ind,,drop=FALSE]
   ll1 = logLik(res)
   if(dim(vec)[2]==3) vec = cbind(vec, 2*pt(abs(vec[ind,3]),1,lower.tail=FALSE))
-  if(hasCov)ll2 = logLik(update(res, ~covar,family=family)) else ll2 = logLik(update(res, ~1,family=family))
+  if(hasCov) 
+    ll2 = logLik(update(res, ~covar,family=family)) 
+  else 
+    ll2 = logLik(update(res, ~1,family=family))
   pv = pchisq((2*(ll1 - ll2))/(totweight),attr(ll1,"df")[1]-attr(ll2,"df")[1],lower.tail=FALSE)
   cbind(c(vec[,1],NA),c(vec[,4],pv))
 }
@@ -777,15 +780,19 @@ function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates 
   geno1 = datanme$geno
   geno1[,3,] = !apply(as.matrix(geno1[,1,]),c(1,2),is.na)
   geno2 = geno1
+  ssamples = NULL
   if(expandData) geno2 = datanme2$geno
   maf = rep(NA,dim(geno1)[1])
   for(k in 1:length(geno_header)) maf[k] = .getMaf(as.numeric(geno1[k,1,]),baselevel[k],2)
   for(j in 1:(dim(datanme$strat)[2])){
     inclu = datanme2$strat[,j]
     res[j,,,] =  pvFunctMult(geno2,datanme2$pheno,families,inclu,datanme2$pheno_cov,rescale,pvFunct,funct)
+    ssamples = c(ssamples, sum(apply(cbind(as.numeric(is.na(geno2[1,1,])), as.vector(apply(is.na(datanme2$pheno[,1,]), 2, sum)), as.vector(apply(is.na(datanme2$pheno_cov), 1, sum))),1, sum) == 0))
   }
-  if(length(index_strat)>0) 
+  if(length(index_strat)>0){ 
     res[dim(datanme$strat)[2]+1,,,] =apply(apply(res[1:(dim(datanme$strat)[2]-1),,,,drop=FALSE],c(2,3),.metaresInvVarianceFixed),c(3,1),t)
+    ssamples = c(ssamples, sum(apply(cbind(as.numeric(is.na(geno2[1,1,])), as.vector(apply(is.na(datanme2$pheno[,1,]), 2, sum)), as.vector(apply(is.na(datanme2$pheno_cov), 1, sum))),1, sum) == 0))
+}
   #dimcounts = c(dim(datanme$strat)[2],length(families),length(geno_header),(length(spl)+1))
   #countsCase = array(NA,dim=dimcounts)
   #countsControl = array(NA,dim=dimcounts)
@@ -809,8 +816,8 @@ function(genoData, phenoData, phenotypes = dimnames(phenoData)[[2]], covariates 
   #  }
   #}
   res1 = res[1,,,]
-  res1
-  #print(res[dim(res)[1],,,])
+  results = list(Results = res1, nobs = ssamples)
+  return(results)
 }
 .nonNumeric <-
 function(vec) sum(is.na(as.numeric(vec)))==length(vec)
