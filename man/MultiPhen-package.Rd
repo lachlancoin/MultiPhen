@@ -12,8 +12,8 @@ MultiPhen is the package containing the function mPhen, which performs associati
 \tabular{ll}{
 Package: \tab MultiPhen\cr
 Type: \tab Package\cr
-Version: \tab 1.0.0\cr
-Date: \tab 2013-03-20\cr
+Version: \tab 2.0.0\cr
+Date: \tab 2013-12-09\cr
 License: \tab GPL-2\cr
 LazyLoad: \tab yes\cr
 }
@@ -32,11 +32,3 @@ O'Reilly et al. 2012. MultiPhen: Joint model of multiple phenotypes can increase
 \keyword{ multiple phenotypes }
 \keyword{ association }
 
-\examples{
-data(snps)
-data(pheno)
-mPhen(snps, pheno, phenotypes = c('testPheno1', 'testPheno2'), 
-      covariates = 'testPheno3')
-mPhen(snps, pheno, phenotypes = c('testPheno1', 'testPheno2'), 
-      covariates = 'testPheno3', JointModel=TRUE)
-}

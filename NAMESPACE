@@ -9,5 +9,10 @@ import(
   MASS,
   abind,
   epitools,
-  meta
+  meta,
+  HardyWeinberg,
+  RColorBrewer,
+  gplots
 )
+
+   
