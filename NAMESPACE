@@ -1,4 +1,3 @@
-# Default NAMESPACE created by R
 # Remove the previous line if you edit this file
 
 # Export all names
@@ -6,13 +5,18 @@ exportPattern(".")
 
 # Import all packages listed as Imports or Depends
 import(
+  stats,
   MASS,
   abind,
   epitools,
   meta,
   HardyWeinberg,
   RColorBrewer,
-  gplots
+  grDevices,
+  graphics,
+  utils
 )
 
-   
+importFrom(gplots, heatmap.2)
+
+

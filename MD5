@@ -1,11 +1,11 @@
-35597497e2798aeddddfe73c2f03806a *DESCRIPTION
-36c0b7b63f4fcea3472b53c0ff90ce4e *NAMESPACE
+9227a01f4f3fc4611315f12ae5872994 *DESCRIPTION
+adb5e0d7b9937464cc24fdf76931fd80 *NAMESPACE
 e63b841e33c0712fd51ee09e14c3ccab *R/MultiPhen-internal.R
 c36aec06e77a5b447275bbb36d90c5eb *R/mPhen.R
 83ea6c54b1c3f84e7be1755635137fa9 *R/mPhenIO.R
 43b31da2c4fce0ef6326d013652621e4 *R/mPhenSimulate.R
 60b9d4b6c3dd1a52a5152c1f04627461 *R/zzz.R
-63a4dba4f3d15dd28d6ca8ebbb9d2d88 *build/vignette.rds
+082d789655e263a4b40235a56751f16c *build/vignette.rds
 3a1694215ce9b91f55aeca36bb3210a4 *data/pheno.rda
 8d6c18602a0bd940cc8edd18c7ffed95 *data/snps.imputed.rda
 1b02ba439a6ca052ff8b8ca752c48d43 *data/snps.rda
@@ -13,8 +13,8 @@ f11de31ee721bf5155b3736593a78160 *demo/00Index
 ccf2719ab89b5a303acdd26ed16e6fef *demo/MultiPhen-demo.R
 5c4295286a451819e4c803ea0ebe88e4 *inst/doc/MultiPhen.R
 e92055e3aaabfe89f7ede502e3590034 *inst/doc/MultiPhen.Rnw
-4d02a1b7e4fa2d34ca41cf8efc1063d4 *inst/doc/MultiPhen.pdf
-da2e6e1f6a69f25597795df2baa29d88 *man/MultiPhen-internal.Rd
+eb4261624a9dd2920b23b6fe5b44fd8b *inst/doc/MultiPhen.pdf
+27c9c6ad49d333f6b28ccd5431bd20de *man/MultiPhen-internal.Rd
 8d26d7ea7a7a8d7fc965ad53fb60db01 *man/MultiPhen-package.Rd
 fe51551bcfaa080a3deaea359486db6e *man/mPhen.Rd
 6feee0445a7cc833683e0f43b2e09683 *man/mPhen.assoc.Rd
