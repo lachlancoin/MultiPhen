@@ -218,7 +218,7 @@ mPhen.cca<-function(genoData, phenoObject,
       nap = is.na(betasp)
       normp = sqrt(betasp[!nap] %*% betasp[!nap])
     }
-    betasp = betasp / normp
+    betasp = betasp / as.vector(normp)
     phend2[,1,] = betasp %*% phend
     phenoObject2[[1]] <- phend2
     opts$mPhen.inverseRegress = FALSE; opts$mPhen.JointModel = TRUE;       opts$mPhen.variable.selection = vs.G

@@ -1,13 +1,13 @@
 Package: MultiPhen
 Type: Package
 Title: A Package to Test for Pleiotropic Effects
-Version: 2.0.1
-Date: 2015-07-08
+Version: 2.0.2
+Date: 2017-05-09
 Author: Lachlan Coin, Paul O'Reilly, Yotsawat Pompyen, Clive Hoggart
         and Federico Calboli
 Depends: MASS, abind, epitools, meta
 Imports: HardyWeinberg, RColorBrewer, gplots
-Maintainer: Federico Calboli <federico.calboli@helsinki.fi>
+Maintainer: Lachlan Coin <l.coin@imb.uq.edu.au>
 Description: Performs genetic association tests between SNPs
         (one-at-a-time) and multiple phenotypes (separately or in joint
         model).
@@ -15,5 +15,5 @@ License: GPL-2
 LazyLoad: yes
 NeedsCompilation: no
 Repository: CRAN
-Packaged: 2015-07-06 07:45:43 UTC; greatsage
-Date/Publication: 2015-07-06 19:18:09
+Packaged: 2017-05-08 18:48:09 UTC; greatsage
+Date/Publication: 2017-05-16 08:55:22 UTC

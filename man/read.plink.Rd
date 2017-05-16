@@ -5,7 +5,7 @@
 A function to read (small) binary PLINK binary files in a R session
 }
 \description{
-\code{read.plink} is a convenience function designed to read PLINK binary files (i.e. files that end with the suffix ``.bed'') in a R session.  Please be aware that binary PLINK files are binary for a reasosn, i.e. to store genotype data in a compact way.  Once they are imported in R they exist in R in a un ``unpacked'' form, and can therefore be very big.  If the .bed file is big, or very big, the result will be that R will run out of memory and crash, or make the whole system slow or unresponsive.  It is MANDATORY that in the directory containing the binary file also reside two accesory files, with the same name as the binary file but with extensions .fam and .bim, both produced by PLINK.
+\code{read.plink} is a convenience function designed to read PLINK binary files (i.e. files that end with the suffix ``.bed'') in a R session.  Please be aware that binary PLINK files are binary for a reason, i.e. to store genotype data in a compact way.  Once they are imported in R they exist in R in a un ``unpacked'' form, and can therefore be very big.  If the .bed file is big, or very big, the result will be that R will run out of memory and crash, or make the whole system slow or unresponsive.  It is MANDATORY that in the directory containing the binary file also reside two accesory files, with the same name as the binary file but with extensions .fam and .bim, both produced by PLINK.
 }
 \usage{
 read.plink(root,indiv = NULL, opts = mPhen.options("geno.input"))
@@ -24,7 +24,7 @@ Please note that, if the binary file is listed a ``mydata.bed'', the filename is
 A matrix of dimesions n by m, with n rows corresponding to the n individuals in the dataset, and m columns corresponding to the m markers.  The colnames are retrived from the .fam file, and (should) correspond to the markers' names.
 }
 \references{
-The plink homepage is at: \url{http://pngu.mgh.harvard.edu/~purcell/plink/}
+The plink homepage is at: \url{https://www.cog-genomics.org/plink2}
 }
 \author{
 Federico Calboli \email{f.calboli@imperial.ac.uk}  
