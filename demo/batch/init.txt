@@ -1,0 +1,23 @@
+##definition of parameters
+.jointModel=FALSE
+.inverseRegress = "gaussian"  ##"gaussian"  ##"ordinal"
+.exactMethod = NULL # "wald"
+.baseValue =2
+.cohortDir="./cohort2"
+.analysisDir="./cohort2"
+.phenoFiles="pheno.txt" ##relative to cohortDir
+.excludeFile="exclude.txt" ##relative to analysisDir
+.format="CN"   ### use "IMP" for imputed
+
+.genoFile="genos_0_1_3_4_r_.txt" ##relative to cohortDir
+
+.batch=10
+.calcHWE=FALSE
+.writeQCFile=TRUE
+.plotQQ=TRUE
+.saveImage=FALSE
+.resultsName="cnv"
+.starting=0
+.ending=900000000 #999000000
+.sigThresh=1.0
+

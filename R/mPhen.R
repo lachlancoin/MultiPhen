@@ -94,7 +94,7 @@ mPhen <-function(genoData, phenoData,
                  covariates = NULL, resids = NULL, strats = NULL,
                  opts = mPhen.options(c("regression","pheno.input"))){
   if(opts$mPhen.fillMissingPhens) phenoData = .fillMissing(phenoData)
-  limit = list(phenotypes = "all",covariates = covariates, resids = resids, strats = strats)
+  limit = list(phenotypes = phenotypes,covariates = covariates, resids = resids, strats = strats)
   phenoObject = mPhen.preparePheno(list(pheno = phenoData,limit = limit),  indiv = dimnames(genoData)[[1]],  opts = opts)
   results = mPhen.assoc(genoData,phenoObject,opts = opts)
   results  

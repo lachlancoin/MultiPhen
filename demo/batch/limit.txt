@@ -1,0 +1,12 @@
+#### This is used in batch processing script to indicate which phenotypes to model ####
+pheno pheno1
+
+
+##resid SEX
+##strat SEX
+##resid PCA1:PCA10
+##resid  PC0:PC50
+##resid variance
+##excl variance thresh_0.2
+##resid median 
+##covar Plate factor
