@@ -20,18 +20,27 @@ read.plink<-function(root, indiv = NULL,opts =mPhen.options("geno.input")){
 mPhen.readGenotypes<-function(genoConnection, indiv = NULL,opts =mPhen.options("geno.input" )){
   closeConnection = FALSE
   isconnection = is.list(genoConnection)
-  if(isconnection) isconnection = !is.null(genoConnection$conn)
+  
+  if(isconnection){
+     isconnection = !is.null(genoConnection$conn)
+  }
+  if(isconnection && attr(genoConnection,"closeConnection")){
+    indiv = genoConnection$indiv 
+    genoConnection = genoConnection$file
+   
+    isconnection = FALSE;
+  } 
   if(!isconnection){
-    genoConnection<- list(conn = .openGenoConnection(genoConnection, opts, indiv = indiv))
+  
+    genoConnection<- list(file = genoConnection, conn = .openGenoConnection(genoConnection, opts, indiv = indiv))
     samps = attr(genoConnection$conn,"sampleids")
     attr(genoConnection,"rsidToDo") = opts$mPhen.rsidToDo
     if(opts$mPhen.numGenoPCs>0) attr(genoConnection,"K") = array(0,dim = c(length(samps), length(samps)))
     genoConnection$lastPos = opts$mPhen.starting-1
     attr(genoConnection,"closeConnection") = FALSE
   }
-  if(attr(genoConnection,"closeConnection")) return(NULL) ## this is the case the genoConnection was already closed
-
-  opts$mPhen.starting  = genoConnection$lastPos+1
+  
+  opts$mPhen.starting  = as.numeric(genoConnection$lastPos)+1
   opts$mPhen.rsidToDo = attr(genoConnection,"rsidToDo")
   data <- .readGenoConnection(genoConnection$conn,opts = opts)
   if(!is.null(data)){
@@ -39,7 +48,9 @@ mPhen.readGenotypes<-function(genoConnection, indiv = NULL,opts =mPhen.options("
       attr(genoConnection,"K") = .updateRelatedness(data$genoData, attr(genoConnection,"K"))
     }
     genoConnection = .mergeLists(genoConnection,data)
-    lastPos = data$lastPos
+    new_indiv = rownames(genoConnection$genoData)
+    genoConnection$indiv = new_indiv
+     lastPos = data$lastPos
 
     if( data$lastPos >= opts$mPhen.ending ) closeConnection = TRUE
     else if(length(data$rsids)<opts$mPhen.batch) closeConnection = TRUE
@@ -244,7 +255,9 @@ mPhen.writeOutput<-function(results,
 mPhen.readPhenoFiles<-function(phenoFiles,
                                limitFile = getOption("mPhen.limitFile","./limit.txt"),
                                excludeFile =getOption("mPhen.excludeFile","./exclude.txt"),
-                               opts = mPhen.options("pheno.input")){
+                               opts = mPhen.options("pheno.input"),
+                               indiv = NULL
+                               ){
   .naRowThresh = opts$mPhen.naRowThresh
   .naColThresh = opts$mPhen.naColThresh
   fillMissingPhens = opts$mPhen.fillMissingPhens
@@ -289,6 +302,7 @@ mPhen.readPhenoFiles<-function(phenoFiles,
 
   names(phenos_all) = phenoFiles
   pheno3 = .mergeFiles(phenos_all,markerCol=TRUE, anyCol =   !opts$mPhen.onlyCommonPheno)
+ 
   todo=NULL
   if(!is.null(limitFile)){
     if(file.exists(limitFile)){
@@ -297,6 +311,12 @@ mPhen.readPhenoFiles<-function(phenoFiles,
   }
   if(is.null(todo)){
     todo = list(phenotypes = dimnames(pheno3)[[2]],covariates = c(), resids = c(), strats = c(), excls = c())
+  }
+  if(!is.null(indiv)){
+    index_sample<-match(indiv,rownames(pheno3))
+    
+    pheno3 = pheno3[index_sample,, drop=F]
+    rownames(pheno3) = indiv
   }
   result = list(pheno=pheno3, limit=todo)
   result

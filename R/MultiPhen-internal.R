@@ -62,14 +62,19 @@ function(phenv,family,pheno_cov){
 	posi = c(pos_index,chr_index,rs_index,lastIndex,NbSnpIndex))
 }
 
-
-
 .centralise <-
-function(vec,na.replace = NA){
-  vec1 = (vec-mean(vec,na.rm=TRUE))
-  vec1[is.na(vec1)] = na.replace
-  vec1
-}
+  function(vec,inds=1:length(vec), na.replace = NA){
+    vec1 = (vec-mean(vec[inds],na.rm=TRUE))
+    vec1[is.na(vec1)] = na.replace
+    vec1
+  }
+
+#.centralise <-
+#function(vec,na.replace = NA){
+#  vec1 = (vec-mean(vec,na.rm=TRUE))
+#  vec1[is.na(vec1)] = na.replace
+#  vec1
+#}
 
 .standardise <-
 function(vec, na.replace=NA){
@@ -727,7 +732,7 @@ function(phend, gvar, family, inclu,covar,totweight){
   }
   }
   todo = TRUE
-  if(length(which(include))==0 | var(var1,na.rm=TRUE)==0) 
+  if(length(which(include))==0 | all(duplicated(x)[-1L])) 
     todo=FALSE
   if(todo){
 
@@ -805,7 +810,7 @@ function(gvar,phen,families,inclu,covar,totweight,functi, variable_selection){
   if(!ord) ind = ind+1
   todo = TRUE
   tobind = rep(sum(weights[include])/totweight,length(families)+1)
-  if(length(which(include))==0 | var(var1,na.rm=TRUE)==0) 
+  if(length(which(include))==0 | all(duplicated(var1)[-1L])) 
     todo=FALSE
   if(todo){
     if(variable_selection){
@@ -2961,7 +2966,13 @@ if(type=='impute'){
  genotype = array(NA, dim = c(sample.size,n))
  for(k in 1:n){
     r.bin.snp = readBin(bin.connection, what = 'raw', n = snp.size)
-    bin.snp = matrix(as.numeric(rawToBits(r.bin.snp)), ncol = 2, byrow = TRUE)[1:sample.size,]
+    bin.snp = matrix(as.numeric(rawToBits(r.bin.snp)), ncol = 2, byrow = TRUE)
+    if(dim(bin.snp)[1]==0){
+      genotype[genotype == -9] = NA 
+      return(genotype[,1:k-1,drop=F])
+    }
+    
+   bin.snp = bin.snp[1:sample.size,]
     genotype[,k] = bin.snp[,1] + bin.snp[,2] - 10 * ((bin.snp[,1] == 1) & (bin.snp[,2] == 0))
   }
   genotype[genotype == -9] = NA 
@@ -2982,7 +2993,12 @@ if(type=='impute'){
     kj =0
     while(dim(input)[2]>0 & lastPos < .starting & kj <genoInput$snp.size){
       toRead = min(.batch,genoInput$n.snps - kj)
-      input<-.readLinesPlink(genoInput$con, n=toRead,snp.size = genoInput$snp.size,sample.size = sample.size)[subinds,,drop=F]
+      input<-.readLinesPlink(genoInput$con, n=toRead,snp.size = genoInput$snp.size,sample.size = sample.size)
+   ##  print(dim(input))
+  ##   print(max(subinds))
+    
+      input = input[subinds,,drop=F]
+      
       if(.thin>1) input<-input[,seq(1,length(input),by=.thin),drop=F ]
       len<-dim(input)[2]     
       firstPos = genoInput$posi[kj+1,1]
@@ -3023,7 +3039,10 @@ if(type=='impute'){
   nbsnp = rep(NA,len)
   snpids=posi[,3]
   indsToKeep = 1:len
-  dimnames(genoData)[[2]] = apply(posi[,2:1],1,paste,collapse="_")
+  print(dim(genoData))
+  if(dim(genoData)[[2]]==0) return (NULL)
+  dimnames(genoData)[[2]] = apply(posi[,2:1],1,paste,collapse="_")[1:(dim(genoData)[2])]
+  
   res1 = list(len=length(indsToKeep),nbsnp = nbsnp[indsToKeep], firstPos=firstPos,lastPos=lastPos, genoData=genoData[,indsToKeep,drop=F],
               chrom=chrom, rsids=posi[,info_ind])
   res1
