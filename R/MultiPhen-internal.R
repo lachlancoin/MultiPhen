@@ -732,7 +732,7 @@ function(phend, gvar, family, inclu,covar,totweight){
   }
   }
   todo = TRUE
-  if(length(which(include))==0 | all(duplicated(x)[-1L])) 
+  if(length(which(include))==0 | all(duplicated(var1)[-1L])) 
     todo=FALSE
   if(todo){
 
@@ -3293,9 +3293,9 @@ dn
   snps = snps[todo,,drop=F]
   rsids = rsids[todo]   
   len = length(todo)
-  if(len==0){
-    next     
-  }
+  #if(len==0){
+  #  next     
+  #}
   firstPos = pos[1]
   lastPos =  pos[len]
   nsamp = length(genoInput$sampleids)

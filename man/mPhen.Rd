@@ -60,7 +60,7 @@ The user should remember that the genotype data file is always a matrix of at le
 \examples{
 data(snps); data(snps.imputed); data(pheno)
 opts = mPhen.options(c("regression","pheno.input"))
-res = mPhen(snps, pheno, phenotypes = all,
+res = mPhen(snps, pheno, phenotypes = "all",
       covariates = c('testPheno3', 'testPheno4'),opts = opts) 
 # performs a MultiPhen analysis, with snp as outcome,
 # and phenotypes testPheno1, testPheno2 as predictors, 

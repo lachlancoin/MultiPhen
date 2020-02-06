@@ -5,7 +5,8 @@
 \usage{mPhen.readPhenoFiles(phenoFiles,
 	limitFile = getOption("mPhen.limitFile","./limit.txt"),
 	 excludeFile =getOption("mPhen.excludeFile","./exclude.txt"),	
-		opts = mPhen.options("pheno.input"))}
+		opts = mPhen.options("pheno.input"),
+		indiv = NULL)}
 \arguments{
 \item{phenoFiles}{A list of paths to phenotype files (can be more than 1)}
 \item{excludeFile}{ A path to a file which lists ids to exclude from further analysis, or
@@ -19,6 +20,7 @@ The transformation syntax includes 'quantile' and 'factor', and also 'thresh_x_y
 }
 \item{opts}{A list of options, which is obtained from mPhen.options("pheno.input").  To get more information about these options, type 
 mPhen.options("pheno.input",descr=TRUE)}
+\item{indiv}{A list of individual ids. If provided the phenotype matrix will be re-ordered to match}
 }
 \value{An object consisting of a  single merged phenotype matrix, and also a 'limit' object which specifies phenotypes to include in analyses.  The limit is a list with the following entries.
 	 phenotypes - vector of phenotypes to be tested. If set to 'all' then all phenotypes are used.
