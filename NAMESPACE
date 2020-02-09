@@ -17,6 +17,5 @@ import(
   utils
 )
 
-importFrom(gplots, heatmap.2)
 
 
