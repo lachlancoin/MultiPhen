@@ -1992,6 +1992,8 @@ if(length(argsst)>0){
 
   .sample1<-function(probv)  sample(0:1, 1, prob = probv)
 
+  .sample2<-function(probv)  sample(1:length(probv)-1, 1, prob = probv/sum(probv))
+  
 ##simply samples from a dirichlet with probability distribution p
 ## and weight w.
 .sampDirichlet<-function(p,weight=1){

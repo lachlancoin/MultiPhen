@@ -87,50 +87,66 @@ mPhen.sampleCovar<-function(noPhenos,blockSize, orthogAll = c(0.9,0.5),dirichlet
 ##corrSt is an object with cholesky decomposition, obtained from mPhen.cholesky
 ##varexp is a number between 0 and 1 representing the target variance explained in the major direction of effect
 mPhen.simulate<-function(x,sample_names,covar,effDir, varexp, inverse = FALSE, geno.link="gaussian", 
- effDirInReverseEigenspace = FALSE, freq = 0.1){
- if( effDirInReverseEigenspace){
-      ev = eigen(covar)
-      beta = effDir/ sqrt(effDir %*% effDir)
-      effDir<- (ev$vectors %*% rev(beta))[,1]
- }
-  if(inverse){
-     x = rep(0,length(sample_names))
-     v = NULL
-     varexp0=0
-  }else{
-     v = effDir
-     y = x
-     varexp0 = varexp
+                         effDirInReverseEigenspace = FALSE, freq = 0.1){
+  if( effDirInReverseEigenspace){
+    ev = eigen(covar)
+    beta = effDir/ sqrt(effDir %*% effDir)
+    effDir<- (ev$vectors %*% rev(beta))[,1]
   }
-   corrSt = .cholesky(covar,v)  ## gets a cholesky decomposition required for simulation
-   cholT=corrSt$cholT;  
-   Minv = corrSt$Minv;
-   sdT = corrSt$sdT
-   means = corrSt$means
-   outpT = .sampJoint(cholT,x=as.vector(x),varexp = varexp0,sd=sdT)
-   outp =means +  outpT %*% Minv  ##t(M %*% t(outpT))
-   dimnames(outp) = list(sample_names,dimnames(cholT)[[1]]) 
- 
   if(inverse){
-    y = .sampJoint(matrix(1), x = (outp %*% effDir)[,1], varexp = varexp, sd = 1)
-    if(geno.link=="binomial"){
-	  prob = pnorm(y)
-	    caseStatus = as.matrix(apply(cbind(1-prob,prob),1,.sample1))
-            y = caseStatus[,1]
+    x = rep(0,length(sample_names))
+    v = NULL
+    varexp0=0
+  }else{
+    v = effDir
+    y = x
+    varexp0 = varexp
+  }
+  corrSt = .cholesky(covar,v)  ## gets a cholesky decomposition required for simulation
+  cholT=corrSt$cholT;  
+  Minv = corrSt$Minv;
+  sdT = corrSt$sdT
+  means = corrSt$means
+  outpT = .sampJoint(cholT,x=as.vector(x),varexp = varexp0,sd=sdT)
+  outp =means +  outpT %*% Minv  ##t(M %*% t(outpT))
+  dimnames(outp) = list(sample_names,dimnames(cholT)[[1]]) 
+  
+  if(inverse){
+    xx = (outp %*% effDir)
+    if(geno.link=="gaussian"){
+      y = .sampJoint(matrix(1), x = xx[,1], varexp = varexp, sd = 1)
+    }else if(geno.link=="binomial"){
+      y = .sampJoint(matrix(1), x = xx[,1], varexp = varexp, sd = 1)
+      prob = pnorm(y)
+      caseStatus = as.matrix(apply(cbind(1-prob,prob),1,.sample1))
+      y = caseStatus[,1]
+    }else if(geno.link=="multinomial"){
+      dXX = dim(xx)[2]
+      # pPivot = (dXX+1)^(-1/dXX) ## calculate the probability of <0 (for the pivot)
+      prob = matrix(nrow=dim(xx)[1],ncol=0)
+      for(jj in 1:dXX){
+        x = xx[,jj]
+        #x = x-qnorm(pPivot,sd=sd(x))
+        #x = x-qnorm(0.5,sd=sd(x))
+        y = .sampJoint(matrix(1), x=x, varexp = varexp, sd = 1)
+        prob = cbind(prob,exp(y))
+      }
+      y = as.matrix(apply(prob,1,.sample2))
     }else if(geno.link=="ordinal"){
-	thresh = c((1-freq)^2,2*freq*(1-freq),freq^2)        
-        prob1 = pnorm(y-qnorm(thresh[1]))
-        mat1 = cbind(1-prob1,prob1)
-        prob2 = pnorm(y-qnorm(sum(thresh[1:2])))
-        mat2 =  cbind(1-prob2,prob2)
-        caseStatus = as.matrix(apply(mat1,1,.sample1))
-        ind = caseStatus==1
-	caseStatus[ind,] = (as.matrix(apply(mat2,1,.sample1))+1)[ind,]
-        y = caseStatus
-   }
- }
- limit = list(phenotypes = dimnames(outp)[[2]],covariates = NULL, resids = NULL, strats = NULL, excls = NULL)
- list(pheno = outp, geno = y,effDir=effDir, limit = limit)
+      y = .sampJoint(matrix(1), x = xx[,1], varexp = varexp, sd = 1)
+      thresh = c((1-freq)^2,2*freq*(1-freq),freq^2)
+      prob1 = pnorm(y-qnorm(thresh[1]))
+      mat1 = cbind(1-prob1,prob1)
+      prob2 = pnorm(y-qnorm(sum(thresh[1:2])))
+      mat2 =  cbind(1-prob2,prob2)
+      caseStatus = as.matrix(apply(mat1,1,.sample1))
+      ind = caseStatus==1
+      caseStatus[ind,] = (as.matrix(apply(mat2,1,.sample1))+1)[ind,]
+      y = caseStatus
+    }
+  }
+  limit = list(phenotypes = dimnames(outp)[[2]],covariates = NULL, resids = NULL, strats = NULL, excls = NULL)
+  list(pheno = outp, geno = y,effDir=effDir, limit = limit)
 }
 
 
